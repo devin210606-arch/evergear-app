@@ -1,0 +1,1 @@
+ C:\\evergear\\build\\3947f3c4a1626e6590f6435d7f916f87\\dart_build_result.json:  C:\\evergear\\.dart_tool\\package_config.json C:\\evergear\\pubspec.yaml C:\\flutter\\bin\\cache\\dart-sdk\\version c:\\evergear\\.dart_tool\\package_config.json
