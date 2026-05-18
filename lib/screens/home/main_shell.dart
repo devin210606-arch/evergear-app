@@ -9,12 +9,19 @@ import '../account/account_screen.dart';
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
 
+  static _MainShellState? of(BuildContext context) =>
+      context.findAncestorStateOfType<_MainShellState>();
+
   @override
   State<MainShell> createState() => _MainShellState();
 }
 
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
+
+  void switchTab(int index) {
+    setState(() => _currentIndex = index);
+  }
 
   final List<Widget> _screens = const [
     HomeScreen(),
@@ -93,9 +100,7 @@ class _EverGearNavBar extends StatelessWidget {
                             : null,
                         child: Icon(
                           isActive ? item.activeIcon : item.icon,
-                          color: isActive
-                              ? AppTheme.primary
-                              : const Color(0xFF9CA3AF),
+                          color: isActive ? AppTheme.primary : const Color(0xFF9CA3AF),
                           size: 22,
                         ),
                       ),
@@ -104,11 +109,8 @@ class _EverGearNavBar extends StatelessWidget {
                         item.label,
                         style: GoogleFonts.poppins(
                           fontSize: 10,
-                          fontWeight:
-                              isActive ? FontWeight.w600 : FontWeight.w400,
-                          color: isActive
-                              ? AppTheme.primary
-                              : const Color(0xFF9CA3AF),
+                          fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                          color: isActive ? AppTheme.primary : const Color(0xFF9CA3AF),
                         ),
                       ),
                     ],
@@ -127,6 +129,5 @@ class _NavItem {
   final IconData icon;
   final IconData activeIcon;
   final String label;
-  const _NavItem(
-      {required this.icon, required this.activeIcon, required this.label});
+  const _NavItem({required this.icon, required this.activeIcon, required this.label});
 }

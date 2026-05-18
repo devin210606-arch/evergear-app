@@ -7,6 +7,7 @@ import 'screens/auth/forgot_password_screen.dart';
 import 'screens/auth/check_email_screen.dart';
 import 'screens/auth/otp_screen.dart';
 import 'screens/auth/signup_screen.dart';
+import 'screens/home/wallet_screen.dart';
 import 'screens/home/main_shell.dart';
 
 void main() {
@@ -37,6 +38,8 @@ class EverGearApp extends StatelessWidget {
         '/otp': (_) => const OtpScreen(),
         '/signup': (_) => const SignUpScreen(),
         '/main': (_) => const MainShell(),
+        '/wallet': (_) => const WalletScreen(),
+       
       },
     );
   }
