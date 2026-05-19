@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+// NEW: Added services.dart for the FilteringTextInputFormatter
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../theme/app_theme.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class ListPartScreen extends StatefulWidget {
   const ListPartScreen({super.key});
@@ -15,6 +19,9 @@ class _ListPartScreenState extends State<ListPartScreen> {
   final _descCtrl = TextEditingController();
   int _selectedCategory = -1;
   String _selectedCondition = 'Refurbished';
+
+  // NEW: Added state variable for storing selected photos
+  final List<File> _photos = [];
 
   final List<Map<String, dynamic>> _categories = [
     {'label': 'LCD', 'icon': Icons.phone_android},
@@ -78,36 +85,84 @@ class _ListPartScreenState extends State<ListPartScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
 
-            // Photo upload area
-            GestureDetector(
-              onTap: () {
-                // TODO: image picker
-              },
-              child: Container(
-                width: double.infinity,
-                height: 160,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                      color: AppTheme.primary.withOpacity(0.3),
-                      style: BorderStyle.solid),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.add_photo_alternate_outlined,
-                        size: 48, color: AppTheme.primary),
-                    const SizedBox(height: 8),
-                    Text('Tap to add photos',
-                        style: GoogleFonts.poppins(
-                            color: AppTheme.primary,
-                            fontWeight: FontWeight.w500)),
-                    Text('Max 5 photos',
-                        style: GoogleFonts.poppins(
-                            fontSize: 11, color: AppTheme.textSecondary)),
-                  ],
-                ),
+            // NEW: Replaced the static photo upload area with the interactive horizontal ListView
+            SizedBox(
+              height: 100,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: [
+                  // Add photo button
+                  GestureDetector(
+                    onTap: () async {
+                      if (_photos.length >= 5) {
+                        _showError('Maximum 5 photos allowed');
+                        return;
+                      }
+                      final picker = ImagePicker();
+                      final picked = await picker.pickImage(source: ImageSource.gallery);
+                      if (picked != null) {
+                        setState(() => _photos.add(File(picked.path)));
+                      }
+                    },
+                    child: Container(
+                      width: 90,
+                      height: 90,
+                      margin: const EdgeInsets.only(right: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color: AppTheme.primary.withOpacity(0.3)),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.add_photo_alternate_outlined,
+                              size: 28, color: AppTheme.primary),
+                          Text('Add Photo',
+                              style: GoogleFonts.poppins(
+                                  fontSize: 10, color: AppTheme.primary)),
+                          Text('${_photos.length}/5',
+                              style: GoogleFonts.poppins(
+                                  fontSize: 10, color: AppTheme.textSecondary)),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Preview selected photos
+                  ..._photos.asMap().entries.map((e) => Stack(
+                    children: [
+                      Container(
+                        width: 90,
+                        height: 90,
+                        margin: const EdgeInsets.only(right: 8),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.file(e.value, fit: BoxFit.cover),
+                        ),
+                      ),
+                      Positioned(
+                        top: 4,
+                        right: 12,
+                        child: GestureDetector(
+                          onTap: () => setState(() => _photos.removeAt(e.key)),
+                          child: Container(
+                            width: 20,
+                            height: 20,
+                            decoration: const BoxDecoration(
+                              color: AppTheme.error,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.close, color: Colors.white, size: 12),
+                          ),
+                        ),
+                      ),
+                    ],
+                  )),
+                ],
               ),
             ),
             const SizedBox(height: 16),
@@ -128,8 +183,10 @@ class _ListPartScreenState extends State<ListPartScreen> {
                       style: GoogleFonts.poppins(
                           fontSize: 12, color: AppTheme.textSecondary)),
                   const SizedBox(height: 6),
+                  // NEW: Added maxLength: 60
                   TextField(
                     controller: _nameCtrl,
+                    maxLength: 60,
                     decoration: const InputDecoration(
                         hintText: 'e.g. iPhone 14 Camera Module'),
                   ),
@@ -140,9 +197,11 @@ class _ListPartScreenState extends State<ListPartScreen> {
                       style: GoogleFonts.poppins(
                           fontSize: 12, color: AppTheme.textSecondary)),
                   const SizedBox(height: 6),
+                  // NEW: Added inputFormatters for digits only
                   TextField(
                     controller: _priceCtrl,
                     keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     decoration: const InputDecoration(
                         hintText: 'e.g. 120000',
                         prefixText: 'Rp. '),
@@ -234,9 +293,11 @@ class _ListPartScreenState extends State<ListPartScreen> {
                       style: GoogleFonts.poppins(
                           fontSize: 12, color: AppTheme.textSecondary)),
                   const SizedBox(height: 6),
+                  // NEW: Added maxLength: 300
                   TextField(
                     controller: _descCtrl,
                     maxLines: 4,
+                    maxLength: 300,
                     decoration: const InputDecoration(
                         hintText: 'Describe the condition, compatibility, etc.'),
                   ),

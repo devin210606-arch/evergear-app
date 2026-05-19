@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../theme/app_theme.dart';
 import '../../widgets/product_card.dart';
 import 'product_detail_screen.dart';
 

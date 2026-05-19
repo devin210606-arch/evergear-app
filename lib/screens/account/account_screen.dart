@@ -19,6 +19,7 @@ class AccountScreen extends StatelessWidget {
           child: Column(
             children: [
               // Profile header
+// Profile header
               Container(
                 color: Colors.white,
                 padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
@@ -42,6 +43,10 @@ class AccountScreen extends StatelessWidget {
                     Text('Buyerland@gmail.com',
                         style: GoogleFonts.poppins(
                             fontSize: 13, color: AppTheme.textSecondary)),
+                    // Phone number
+                    Text('+62 812-3456-7890',
+                        style: GoogleFonts.poppins(
+                            fontSize: 12, color: AppTheme.textSecondary)),
                   ],
                 ),
               ),

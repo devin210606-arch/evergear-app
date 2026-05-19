@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../theme/app_theme.dart';
+// NEW: Added the two imports here at the top
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -13,6 +16,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _nameCtrl = TextEditingController(text: 'Buyer 1');
   final _emailCtrl = TextEditingController(text: 'Buyerland@gmail.com');
   final _phoneCtrl = TextEditingController(text: '');
+  
+  // NEW: Added the image variable here, with your other state variables
+  File? _profileImage;
 
   @override
   void dispose() {
@@ -38,35 +44,51 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // Avatar
+            
+            // NEW: This entire Center block replaced the old avatar code
             Center(
-              child: Stack(
-                children: [
-                  Container(
-                    width: 90,
-                    height: 90,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF1C1C2E),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.person, color: Colors.white, size: 52),
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      width: 28,
-                      height: 28,
+              child: GestureDetector(
+                onTap: () async {
+                  final picker = ImagePicker();
+                  final picked = await picker.pickImage(source: ImageSource.gallery);
+                  if (picked != null) {
+                    setState(() => _profileImage = File(picked.path));
+                  }
+                },
+                child: Stack(
+                  children: [
+                    Container(
+                      width: 90,
+                      height: 90,
                       decoration: const BoxDecoration(
-                        color: AppTheme.primary,
+                        color: Color(0xFF1C1C2E),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.camera_alt, color: Colors.white, size: 16),
+                      child: _profileImage != null
+                          ? ClipOval(
+                              child: Image.file(_profileImage!,
+                                  width: 90, height: 90, fit: BoxFit.cover))
+                          : const Icon(Icons.person, color: Colors.white, size: 52),
                     ),
-                  ),
-                ],
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        width: 28,
+                        height: 28,
+                        decoration: const BoxDecoration(
+                          color: AppTheme.primary,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.camera_alt, color: Colors.white, size: 16),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
+            // END OF NEW AVATAR CODE
+
             const SizedBox(height: 24),
 
             Container(
