@@ -4,6 +4,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/category_chip.dart';
 import '../home/main_shell.dart';
 import 'list_part_screen.dart';
+import '../home/product_detail_screen.dart';
 
 class SellScreen extends StatefulWidget {
   const SellScreen({super.key});
@@ -93,7 +94,8 @@ class _SellScreenState extends State<SellScreen> {
                          status: item['status'] as String,
                          statusColor: item['statusColor'] as Color,
                          icon: item['icon'] as IconData,
-                         onTap: () => Navigator.pushNamed(context, '/product-detail'),
+                         onTap: () => Navigator.push(context,
+                          MaterialPageRoute(builder: (_) => const ProductDetailScreen(isMine: true))),
                        ),
                      )),
                     const SizedBox(height: 8),

@@ -4,8 +4,16 @@ import '../../theme/app_theme.dart';
 import '../chat/chat_screen.dart';
 import 'payment_screen.dart';
 
-class ProductDetailScreen extends StatelessWidget {
-  const ProductDetailScreen({super.key});
+class ProductDetailScreen extends StatefulWidget {
+  final bool isMine;
+  const ProductDetailScreen({super.key, this.isMine = false});
+
+  @override
+  State<ProductDetailScreen> createState() => _ProductDetailScreenState();
+}
+
+class _ProductDetailScreenState extends State<ProductDetailScreen> {
+  bool _isFavorited = false;
 
   @override
   Widget build(BuildContext context) {
@@ -19,23 +27,26 @@ class ProductDetailScreen extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.favorite_border),
-            onPressed: () {},
-          ),
+          if (!widget.isMine)
+            IconButton(
+              icon: Icon(
+                _isFavorited ? Icons.favorite : Icons.favorite_border,
+                color: _isFavorited ? Colors.red : null,
+              ),
+              onPressed: () => setState(() => _isFavorited = !_isFavorited),
+            ),
         ],
       ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Product image area
+            // Product image
             Container(
               width: double.infinity,
               height: 280,
               color: Colors.white,
-              child: const Icon(Icons.camera_alt,
-                  size: 100, color: AppTheme.primary),
+              child: const Icon(Icons.camera_alt, size: 100, color: AppTheme.primary),
             ),
 
             Padding(
@@ -69,8 +80,7 @@ class ProductDetailScreen extends StatelessWidget {
                           style: GoogleFonts.poppins(
                               fontSize: 13, color: AppTheme.textSecondary)),
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
                           color: AppTheme.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(6),
@@ -99,58 +109,88 @@ class ProductDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
 
-                  // Seller info
-                  Text('Seller',
-                      style: GoogleFonts.poppins(
-                          fontSize: 15, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFE5E7EB)),
+                  // Seller info — only show when NOT mine
+                  if (!widget.isMine) ...[
+                    Text('Seller',
+                        style: GoogleFonts.poppins(
+                            fontSize: 15, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFE5E7EB)),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE0E7FF),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Icon(Icons.person,
+                                color: AppTheme.primary, size: 24),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Seller Name',
+                                    style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 13)),
+                                Text('Jakarta, Indonesia',
+                                    style: GoogleFonts.poppins(
+                                        fontSize: 11,
+                                        color: AppTheme.textSecondary)),
+                              ],
+                            ),
+                          ),
+                          OutlinedButton(
+                            onPressed: () => Navigator.push(context,
+                                MaterialPageRoute(
+                                    builder: (_) => const ChatScreen())),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 6),
+                              minimumSize: Size.zero,
+                            ),
+                            child: Text('Chat',
+                                style: GoogleFonts.poppins(fontSize: 12)),
+                          ),
+                        ],
+                      ),
                     ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE0E7FF),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Icon(Icons.person,
-                              color: AppTheme.primary, size: 24),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Seller Name',
-                                  style: GoogleFonts.poppins(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 13)),
-                              Text('Jakarta, Indonesia',
-                                  style: GoogleFonts.poppins(
-                                      fontSize: 11,
-                                      color: AppTheme.textSecondary)),
-                            ],
-                          ),
-                        ),
-                        OutlinedButton(
-                          onPressed: () => Navigator.push(context,
-                              MaterialPageRoute(builder: (_) => const ChatScreen())),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            minimumSize: Size.zero,
-                          ),
-                          child: Text('Chat', style: GoogleFonts.poppins(fontSize: 12)),
-                        ),
-                      ],
+                  ],
+
+                  // My listing stats — only show when it IS mine
+                  if (widget.isMine) ...[
+                    Text('Listing Stats',
+                        style: GoogleFonts.poppins(
+                            fontSize: 15, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFE5E7EB)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _StatBox(label: 'Views', value: '124'),
+                          _StatBox(label: 'Interested', value: '8'),
+                          _StatBox(label: 'Chats', value: '3'),
+                        ],
+                      ),
                     ),
-                  ),
+                  ],
+
                   const SizedBox(height: 100),
                 ],
               ),
@@ -159,24 +199,106 @@ class ProductDetailScreen extends StatelessWidget {
         ),
       ),
 
-      // Buy button pinned at bottom
+      // Bottom bar changes based on isMine
       bottomNavigationBar: Container(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         decoration: const BoxDecoration(
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-                color: Color(0x14000000), blurRadius: 12, offset: Offset(0, -4))
+                color: Color(0x14000000),
+                blurRadius: 12,
+                offset: Offset(0, -4))
           ],
         ),
-        child: ElevatedButton(
-          onPressed: () => Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const PaymentScreen())),
-          child: Text('Buy Now',
-              style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.w700, letterSpacing: 1.2)),
-        ),
+        child: widget.isMine
+            ? Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _showDeleteConfirm(context),
+                      icon: const Icon(Icons.delete_outline,
+                          color: AppTheme.error, size: 18),
+                      label: Text('Delete',
+                          style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.error)),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppTheme.error),
+                        minimumSize: const Size(0, 48),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {},
+                      icon: const Icon(Icons.edit_outlined, size: 18),
+                      label: Text('Edit Listing',
+                          style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w700)),
+                    ),
+                  ),
+                ],
+              )
+            : ElevatedButton(
+                onPressed: () => Navigator.push(context,
+                    MaterialPageRoute(
+                        builder: (_) => const PaymentScreen())),
+                child: Text('Buy Now',
+                    style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.w700, letterSpacing: 1.2)),
+              ),
       ),
+    );
+  }
+
+  void _showDeleteConfirm(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Delete Listing',
+            style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        content: Text('Are you sure you want to delete this listing?',
+            style: GoogleFonts.poppins(fontSize: 13)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel', style: GoogleFonts.poppins()),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
+            child: Text('Delete', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatBox extends StatelessWidget {
+  final String label;
+  final String value;
+  const _StatBox({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(value,
+            style: GoogleFonts.poppins(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.primary)),
+        Text(label,
+            style: GoogleFonts.poppins(
+                fontSize: 11, color: AppTheme.textSecondary)),
+      ],
     );
   }
 }

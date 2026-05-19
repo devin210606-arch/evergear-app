@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../theme/app_theme.dart';
-
+import '../home/product_detail_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -113,13 +113,13 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                 ),
                 OutlinedButton(
-                  onPressed: () {},
+                  onPressed: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const ProductDetailScreen())),
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size(60, 32),
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                   ),
-                  child: Text('View',
-                      style: GoogleFonts.poppins(fontSize: 12)),
+                  child: Text('View', style: GoogleFonts.poppins(fontSize: 12)),
                 ),
               ],
             ),

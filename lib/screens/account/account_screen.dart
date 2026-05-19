@@ -5,6 +5,7 @@ import 'edit_profile_screen.dart';
 import 'change_password_screen.dart';
 import 'payment_method_screen.dart';
 import 'help_center_screen.dart';
+import '../home/favorites_screen.dart';
 
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
@@ -56,6 +57,13 @@ class AccountScreen extends StatelessWidget {
                       label: 'Edit Profile',
                       onTap: () => Navigator.push(context,
                           MaterialPageRoute(builder: (_) => const EditProfileScreen())),
+                    ),
+                    const Divider(height: 1, indent: 16, endIndent: 16),
+                    _MenuItem(
+                      icon: Icons.favorite_outline,
+                      label: 'My Favorites',
+                      onTap: () => Navigator.push(context,
+                          MaterialPageRoute(builder: (_) => const FavoritesScreen())),
                     ),
                     const Divider(height: 1, indent: 16, endIndent: 16),
                     _MenuItem(
