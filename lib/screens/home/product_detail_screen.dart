@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../theme/app_theme.dart';
+import '../chat/chat_screen.dart';
+import 'payment_screen.dart';
 
 class ProductDetailScreen extends StatelessWidget {
   const ProductDetailScreen({super.key});
@@ -138,14 +140,13 @@ class ProductDetailScreen extends StatelessWidget {
                           ),
                         ),
                         OutlinedButton(
-                          onPressed: () {},
+                          onPressed: () => Navigator.push(context,
+                              MaterialPageRoute(builder: (_) => const ChatScreen())),
                           style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             minimumSize: Size.zero,
                           ),
-                          child: Text('Chat',
-                              style: GoogleFonts.poppins(fontSize: 12)),
+                          child: Text('Chat', style: GoogleFonts.poppins(fontSize: 12)),
                         ),
                       ],
                     ),
@@ -169,7 +170,8 @@ class ProductDetailScreen extends StatelessWidget {
           ],
         ),
         child: ElevatedButton(
-          onPressed: () {},
+          onPressed: () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const PaymentScreen())),
           child: Text('Buy Now',
               style: GoogleFonts.poppins(
                   fontWeight: FontWeight.w700, letterSpacing: 1.2)),

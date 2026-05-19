@@ -16,6 +16,12 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedCategory = -1;
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _selectedCategory = -1;
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
@@ -198,9 +204,9 @@ class _HomeScreenState extends State<HomeScreen> {
         (i) => Expanded(
           child: Padding(
             padding: const EdgeInsets.only(right: 8),
-            child: GestureDetector(
+              child: GestureDetector(
               onTap: () {
-                setState(() => _selectedCategory = i);
+                setState(() => _selectedCategory = _selectedCategory == i ? -1 : i);
                 MainShell.of(context)?.switchTab(1);
               },
               child: CategoryChip(
@@ -228,14 +234,14 @@ class _HomeScreenState extends State<HomeScreen> {
           name: 'Iphone 17 Camera',
           price: 'Rp. 200.000',
           rating: 3.9,
-          icon: Icons.camera_alt,
+          icon: Icons.camera_alt_outlined,
           onTap: () => Navigator.pushNamed(context, '/product-detail'),
         ),
         ProductCard(
           name: 'Google Pixel 7 Camera',
           price: 'Rp. 120.000',
           rating: 5.0,
-          icon: Icons.camera,
+          icon: Icons.camera_alt_outlined,
           onTap: () => Navigator.pushNamed(context, '/product-detail'),
         ),
         ProductCard(

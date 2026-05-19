@@ -17,8 +17,8 @@ class _BuyScreenState extends State<BuyScreen> {
   int _selectedCategory = -1;
 
   final List<Map<String, dynamic>> _allProducts = [
-    {'name': 'Iphone 17 Camera', 'price': 'Rp. 200.000', 'rating': 3.9, 'icon': Icons.camera_alt, 'category': 2},
-    {'name': 'Google Pixel 7 Camera', 'price': 'Rp. 120.000', 'rating': 5.0, 'icon': Icons.camera, 'category': 2},
+    {'name': 'Iphone 17 Camera', 'price': 'Rp. 200.000', 'rating': 3.9, 'icon': Icons.camera_alt_outlined, 'category': 2},
+    {'name': 'Google Pixel 7 Camera', 'price': 'Rp. 120.000', 'rating': 5.0, 'icon': Icons.camera_alt_outlined, 'category': 2},
     {'name': 'Samsung LCD A54', 'price': 'Rp. 95.000', 'rating': 4.2, 'icon': Icons.phone_android, 'category': 0},
     {'name': 'Xiaomi Battery 5000', 'price': 'Rp. 55.000', 'rating': 3.5, 'icon': Icons.battery_full, 'category': 1},
     {'name': 'iPhone Back Cover', 'price': 'Rp. 45.000', 'rating': 4.0, 'icon': Icons.smartphone, 'category': 3},
