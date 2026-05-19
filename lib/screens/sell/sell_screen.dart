@@ -15,6 +15,13 @@ class SellScreen extends StatefulWidget {
 
 class _SellScreenState extends State<SellScreen> {
   int _selectedCategory = -1;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      setState(() => _selectedCategory = -1);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -18,28 +18,32 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
+  int _buyCategory = -1;
 
-  void switchTab(int index) {
-    setState(() => _currentIndex = index);
+  void switchTab(int index, {int? category}) {
+    setState(() {
+      _currentIndex = index;
+      if (category != null) _buyCategory = category;
+      // reset buy category when tapping Buy tab directly with no category
+      if (category == null && index == 1) _buyCategory = -1;
+    });
   }
-
-  final List<Widget> _screens = const [
-    HomeScreen(),
-    BuyScreen(),
-    SellScreen(),
-    AccountScreen(),
-  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
-        children: _screens,
+        children: [
+          const HomeScreen(),
+          BuyScreen(initialCategory: _buyCategory),
+          const SellScreen(),
+          const AccountScreen(),
+        ],
       ),
       bottomNavigationBar: _EverGearNavBar(
         currentIndex: _currentIndex,
-        onTap: (i) => setState(() => _currentIndex = i),
+        onTap: (i) => switchTab(i),
       ),
     );
   }
@@ -100,7 +104,9 @@ class _EverGearNavBar extends StatelessWidget {
                             : null,
                         child: Icon(
                           isActive ? item.activeIcon : item.icon,
-                          color: isActive ? AppTheme.primary : const Color(0xFF9CA3AF),
+                          color: isActive
+                              ? AppTheme.primary
+                              : const Color(0xFF9CA3AF),
                           size: 22,
                         ),
                       ),
@@ -109,8 +115,11 @@ class _EverGearNavBar extends StatelessWidget {
                         item.label,
                         style: GoogleFonts.poppins(
                           fontSize: 10,
-                          fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                          color: isActive ? AppTheme.primary : const Color(0xFF9CA3AF),
+                          fontWeight:
+                              isActive ? FontWeight.w600 : FontWeight.w400,
+                          color: isActive
+                              ? AppTheme.primary
+                              : const Color(0xFF9CA3AF),
                         ),
                       ),
                     ],
@@ -129,5 +138,6 @@ class _NavItem {
   final IconData icon;
   final IconData activeIcon;
   final String label;
-  const _NavItem({required this.icon, required this.activeIcon, required this.label});
+  const _NavItem(
+      {required this.icon, required this.activeIcon, required this.label});
 }

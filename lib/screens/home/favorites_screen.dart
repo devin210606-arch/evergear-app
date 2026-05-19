@@ -1,13 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../models/favorites_model.dart';
 import '../../widgets/product_card.dart';
 import 'product_detail_screen.dart';
 
-class FavoritesScreen extends StatelessWidget {
+class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});
 
   @override
+  State<FavoritesScreen> createState() => _FavoritesScreenState();
+}
+
+class _FavoritesScreenState extends State<FavoritesScreen> {
+  @override
   Widget build(BuildContext context) {
+    final items = FavoritesModel.items;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
@@ -18,25 +26,46 @@ class FavoritesScreen extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: GridView.count(
-          crossAxisCount: 2,
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          childAspectRatio: 0.75,
-          children: [
-            ProductCard(
-              name: 'Google Pixel 7 Camera',
-              price: 'Rp. 120.000',
-              rating: 5.0,
-              icon: Icons.camera,
-              onTap: () => Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const ProductDetailScreen())),
+      body: items.isEmpty
+          ? Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.favorite_border,
+                      size: 64, color: Color(0xFF9CA3AF)),
+                  const SizedBox(height: 12),
+                  Text('No favorites yet',
+                      style: GoogleFonts.poppins(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1A1A2E))),
+                  const SizedBox(height: 6),
+                  Text('Tap the heart on any product to save it',
+                      style: GoogleFonts.poppins(
+                          fontSize: 13, color: Color(0xFF6B7280))),
+                ],
+              ),
+            )
+          : GridView.count(
+              padding: const EdgeInsets.all(16),
+              crossAxisCount: 2,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              childAspectRatio: 0.75,
+              children: items
+                  .map((item) => ProductCard(
+                        name: item['name'],
+                        price: item['price'],
+                        rating: item['rating'],
+                        icon: item['icon'],
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const ProductDetailScreen()),
+                        ).then((_) => setState(() {})),
+                      ))
+                  .toList(),
             ),
-          ],
-        ),
-      ),
     );
   }
 }

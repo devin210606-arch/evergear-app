@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../theme/app_theme.dart';
 import '../chat/chat_screen.dart';
 import 'payment_screen.dart';
+import '../sell/edit_listing_screen.dart';
+import '../../models/favorites_model.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final bool isMine;
@@ -14,6 +16,12 @@ class ProductDetailScreen extends StatefulWidget {
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   bool _isFavorited = false;
+
+  @override
+void initState() {
+  super.initState();
+  _isFavorited = FavoritesModel.isFavorited('Iphone 17 Camera');
+}
 
   @override
   Widget build(BuildContext context) {
@@ -28,13 +36,25 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         ),
         actions: [
           if (!widget.isMine)
-            IconButton(
-              icon: Icon(
-                _isFavorited ? Icons.favorite : Icons.favorite_border,
-                color: _isFavorited ? Colors.red : null,
-              ),
-              onPressed: () => setState(() => _isFavorited = !_isFavorited),
+          IconButton(
+            icon: Icon(
+              _isFavorited ? Icons.favorite : Icons.favorite_border,
+              color: _isFavorited ? Colors.red : null,
             ),
+            onPressed: () {
+              setState(() => _isFavorited = !_isFavorited);
+              if (_isFavorited) {
+                FavoritesModel.add({
+                  'name': 'Iphone 17 Camera',
+                  'price': 'Rp. 200.000',
+                  'rating': 3.9,
+                  'icon': Icons.camera_alt,
+                });
+              } else {
+                FavoritesModel.remove('Iphone 17 Camera');
+              }
+            },
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -232,7 +252,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () {},
+                      onPressed: () => Navigator.push(context,
+                         MaterialPageRoute(builder: (_) => const EditListingScreen())),
                       icon: const Icon(Icons.edit_outlined, size: 18),
                       label: Text('Edit Listing',
                           style: GoogleFonts.poppins(

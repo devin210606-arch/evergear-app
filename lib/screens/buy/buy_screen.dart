@@ -4,9 +4,11 @@ import '../../theme/app_theme.dart';
 import '../../widgets/category_chip.dart';
 import '../../widgets/product_card.dart';
 import '../home/main_shell.dart';
+import '../home/product_detail_screen.dart';
 
 class BuyScreen extends StatefulWidget {
-  const BuyScreen({super.key});
+  final int initialCategory;
+  const BuyScreen({super.key, this.initialCategory = -1});
 
   @override
   State<BuyScreen> createState() => _BuyScreenState();
@@ -17,13 +19,27 @@ class _BuyScreenState extends State<BuyScreen> {
   int _selectedCategory = -1;
 
   final List<Map<String, dynamic>> _allProducts = [
-    {'name': 'Iphone 17 Camera', 'price': 'Rp. 200.000', 'rating': 3.9, 'icon': Icons.camera_alt_outlined, 'category': 2},
-    {'name': 'Google Pixel 7 Camera', 'price': 'Rp. 120.000', 'rating': 5.0, 'icon': Icons.camera_alt_outlined, 'category': 2},
+    {'name': 'Iphone 17 Camera', 'price': 'Rp. 200.000', 'rating': 3.9, 'icon': Icons.camera_alt, 'category': 2},
+    {'name': 'Google Pixel 7 Camera', 'price': 'Rp. 120.000', 'rating': 5.0, 'icon': Icons.camera, 'category': 2},
     {'name': 'Samsung LCD A54', 'price': 'Rp. 95.000', 'rating': 4.2, 'icon': Icons.phone_android, 'category': 0},
     {'name': 'Xiaomi Battery 5000', 'price': 'Rp. 55.000', 'rating': 3.5, 'icon': Icons.battery_full, 'category': 1},
     {'name': 'iPhone Back Cover', 'price': 'Rp. 45.000', 'rating': 4.0, 'icon': Icons.smartphone, 'category': 3},
     {'name': 'Oppo LCD Screen', 'price': 'Rp. 110.000', 'rating': 3.8, 'icon': Icons.phone_android, 'category': 0},
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedCategory = widget.initialCategory;
+  }
+
+  @override
+  void didUpdateWidget(BuyScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialCategory != widget.initialCategory) {
+      setState(() => _selectedCategory = widget.initialCategory);
+    }
+  }
 
   List<Map<String, dynamic>> get _filteredProducts {
     return _allProducts.where((p) {
@@ -54,7 +70,6 @@ class _BuyScreenState extends State<BuyScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Search bar
                     TextField(
                       controller: _searchCtrl,
                       onChanged: (_) => setState(() {}),
@@ -108,13 +123,19 @@ class _BuyScreenState extends State<BuyScreen> {
                             mainAxisSpacing: 12,
                             crossAxisSpacing: 12,
                             childAspectRatio: 0.75,
-                            children: _filteredProducts.map((p) => ProductCard(
-                              name: p['name'],
-                              price: p['price'],
-                              rating: p['rating'],
-                              icon: p['icon'],
-                              onTap: () => Navigator.pushNamed(context, '/product-detail'),
-                            )).toList(),
+                            children: _filteredProducts
+                                .map((p) => ProductCard(
+                                      name: p['name'],
+                                      price: p['price'],
+                                      rating: p['rating'],
+                                      icon: p['icon'],
+                                      onTap: () => Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (_) =>
+                                                  const ProductDetailScreen())),
+                                    ))
+                                .toList(),
                           ),
                     const SizedBox(height: 20),
                   ],
@@ -203,8 +224,8 @@ class _BuyScreenState extends State<BuyScreen> {
           child: Padding(
             padding: const EdgeInsets.only(right: 8),
             child: GestureDetector(
-              onTap: () => setState(() =>
-                  _selectedCategory = _selectedCategory == i ? -1 : i),
+              onTap: () => setState(
+                  () => _selectedCategory = _selectedCategory == i ? -1 : i),
               child: CategoryChip(
                 icon: cats[i].$2,
                 label: cats[i].$1,
