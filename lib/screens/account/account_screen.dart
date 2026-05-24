@@ -6,6 +6,7 @@ import 'change_password_screen.dart';
 import 'payment_method_screen.dart';
 import 'help_center_screen.dart';
 import '../home/favorites_screen.dart';
+import '../../services/api_service.dart';
 
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
@@ -143,8 +144,10 @@ class AccountScreen extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: OutlinedButton.icon(
-                  onPressed: () =>
-                      Navigator.pushReplacementNamed(context, '/login'),
+                  onPressed: () async {
+                    await ApiService.clearToken();
+                    Navigator.pushReplacementNamed(context, '/login');
+                  },
                   icon: const Icon(Icons.logout, size: 18),
                   label: Text('Logout',
                       style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
