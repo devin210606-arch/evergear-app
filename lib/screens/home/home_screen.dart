@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/category_chip.dart';
 import '../../widgets/product_card.dart';
+import '../../services/api_service.dart';
+import '../home/product_detail_screen.dart';
 import 'main_shell.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -14,6 +16,45 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedCategory = -1;
+  List<Map<String, dynamic>> _popularProducts = [];
+  bool _isLoadingProducts = false;
+
+  String _username = 'User';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUsername();
+    _loadPopularProducts();
+  }
+
+  Future<void> _loadPopularProducts() async {
+    setState(() => _isLoadingProducts = true);
+    final result = await ApiService.getListings();
+    if (result['success']) {
+      setState(() {
+        _popularProducts = List<Map<String, dynamic>>.from(result['data']);
+      });
+    }
+    setState(() => _isLoadingProducts = false);
+  }
+
+  IconData _categoryIcon(String category) {
+    switch (category) {
+      case 'LCD': return Icons.phone_android;
+      case 'Battery': return Icons.battery_full;
+      case 'Camera': return Icons.camera_alt_outlined;
+      case 'Back Cover': return Icons.smartphone;
+      default: return Icons.devices;
+    }
+  }
+
+  Future<void> _loadUsername() async {
+    final result = await ApiService.getProfile();
+    if (result['success']) {
+      setState(() => _username = result['data']['name'] ?? 'User');
+    }
+  }
 
   @override
   void didChangeDependencies() {
@@ -88,7 +129,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text('Hello, Buyer 1',
+            child: Text('Hello, $_username',
                 style: GoogleFonts.poppins(
                     fontWeight: FontWeight.w600,
                     fontSize: 15,
@@ -222,6 +263,20 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildProductGrid(BuildContext context) {
+    if (_isLoadingProducts) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_popularProducts.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text('No products yet',
+              style: GoogleFonts.poppins(color: AppTheme.textSecondary)),
+        ),
+      );
+    }
+
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -229,36 +284,27 @@ class _HomeScreenState extends State<HomeScreen> {
       mainAxisSpacing: 12,
       crossAxisSpacing: 12,
       childAspectRatio: 0.75,
-      children: [
-        ProductCard(
-          name: 'Iphone 17 Camera',
-          price: 'Rp. 200.000',
-          rating: 3.9,
-          icon: Icons.camera_alt_outlined,
-          onTap: () => Navigator.pushNamed(context, '/product-detail'),
+      children: _popularProducts.take(6).map((p) => ProductCard(
+        name: p['title'] ?? '',
+        price: ApiService.formatPrice(p['price']),
+        rating: 4.0,
+        icon: _categoryIcon(p['category'] ?? ''),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ProductDetailScreen(
+              listingId: p['id'],
+              productName: p['title'],
+              price: ApiService.formatPrice(p['price']),
+              priceAmount: p['price'],
+              sellerName: p['seller_name'] ?? '',
+              category: p['category'] ?? '',
+              condition: p['condition'] ?? '',
+              description: p['description'],
+            ),
+          ),
         ),
-        ProductCard(
-          name: 'Google Pixel 7 Camera',
-          price: 'Rp. 120.000',
-          rating: 5.0,
-          icon: Icons.camera_alt_outlined,
-          onTap: () => Navigator.pushNamed(context, '/product-detail'),
-        ),
-        ProductCard(
-          name: 'G Pixel 7 Camera ++',
-          price: 'Rp. 78.000',
-          rating: 2.8,
-          icon: Icons.camera_enhance,
-          onTap: () => Navigator.pushNamed(context, '/product-detail'),
-        ),
-        ProductCard(
-          name: 'Google P8 Battery',
-          price: 'Rp. 420.000',
-          rating: 4.0,
-          icon: Icons.battery_charging_full,
-          onTap: () => Navigator.pushNamed(context, '/product-detail'),
-        ),
-      ],
+      )).toList(),
     );
   }
 }

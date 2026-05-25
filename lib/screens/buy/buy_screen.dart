@@ -5,6 +5,7 @@ import '../../widgets/category_chip.dart';
 import '../../widgets/product_card.dart';
 import '../home/main_shell.dart';
 import '../home/product_detail_screen.dart';
+import '../../services/api_service.dart';
 
 class BuyScreen extends StatefulWidget {
   final int initialCategory;
@@ -16,21 +17,51 @@ class BuyScreen extends StatefulWidget {
 
 class _BuyScreenState extends State<BuyScreen> {
   final _searchCtrl = TextEditingController();
+  String _username = 'User';
   int _selectedCategory = -1;
 
-  final List<Map<String, dynamic>> _allProducts = [
-    {'name': 'Iphone 17 Camera', 'price': 'Rp. 200.000', 'rating': 3.9, 'icon': Icons.camera_alt, 'category': 2},
-    {'name': 'Google Pixel 7 Camera', 'price': 'Rp. 120.000', 'rating': 5.0, 'icon': Icons.camera, 'category': 2},
-    {'name': 'Samsung LCD A54', 'price': 'Rp. 95.000', 'rating': 4.2, 'icon': Icons.phone_android, 'category': 0},
-    {'name': 'Xiaomi Battery 5000', 'price': 'Rp. 55.000', 'rating': 3.5, 'icon': Icons.battery_full, 'category': 1},
-    {'name': 'iPhone Back Cover', 'price': 'Rp. 45.000', 'rating': 4.0, 'icon': Icons.smartphone, 'category': 3},
-    {'name': 'Oppo LCD Screen', 'price': 'Rp. 110.000', 'rating': 3.8, 'icon': Icons.phone_android, 'category': 0},
-  ];
+  IconData _categoryIcon(String category) {
+  switch (category) {
+    case 'LCD': return Icons.phone_android;
+    case 'Battery': return Icons.battery_full;
+    case 'Camera': return Icons.camera_alt_outlined;
+    case 'Back Cover': return Icons.smartphone;
+    default: return Icons.devices;
+  }
+}
+
+  List<Map<String, dynamic>> _allProducts = [];
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
     _selectedCategory = widget.initialCategory;
+    _loadListings();
+    _loadUsername();
+  }
+
+  Future<void> _loadListings() async {
+    setState(() => _isLoading = true);
+    final cats = ['LCD', 'Battery', 'Camera', 'Back Cover'];
+    final category = _selectedCategory == -1 ? null : cats[_selectedCategory];
+    final result = await ApiService.getListings(
+      category: category,
+      search: _searchCtrl.text.isEmpty ? null : _searchCtrl.text,
+    );
+    if (result['success']) {
+      setState(() {
+        _allProducts = List<Map<String, dynamic>>.from(result['data']);
+      });
+    }
+    setState(() => _isLoading = false);
+  }
+
+  Future<void> _loadUsername() async {
+    final result = await ApiService.getProfile();
+    if (result['success']) {
+      setState(() => _username = result['data']['name'] ?? 'User');
+    }
   }
 
   @override
@@ -38,17 +69,11 @@ class _BuyScreenState extends State<BuyScreen> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.initialCategory != widget.initialCategory) {
       setState(() => _selectedCategory = widget.initialCategory);
+      _loadListings();
     }
   }
 
-  List<Map<String, dynamic>> get _filteredProducts {
-    return _allProducts.where((p) {
-      final matchCategory = _selectedCategory == -1 || p['category'] == _selectedCategory;
-      final matchSearch = _searchCtrl.text.isEmpty ||
-          p['name'].toString().toLowerCase().contains(_searchCtrl.text.toLowerCase());
-      return matchCategory && matchSearch;
-    }).toList();
-  }
+  List<Map<String, dynamic>> get _filteredProducts => _allProducts;
 
   @override
   void dispose() {
@@ -72,7 +97,7 @@ class _BuyScreenState extends State<BuyScreen> {
                   children: [
                     TextField(
                       controller: _searchCtrl,
-                      onChanged: (_) => setState(() {}),
+                      onChanged: (_) => _loadListings(),
                       decoration: InputDecoration(
                         hintText: 'search anything',
                         prefixIcon: const Icon(Icons.search, color: AppTheme.textSecondary),
@@ -107,36 +132,46 @@ class _BuyScreenState extends State<BuyScreen> {
                             color: AppTheme.textPrimary)),
                     const SizedBox(height: 12),
 
-                    _filteredProducts.isEmpty
-                        ? Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(40),
-                              child: Text('No products found',
-                                  style: GoogleFonts.poppins(
-                                      color: AppTheme.textSecondary)),
-                            ),
-                          )
-                        : GridView.count(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            crossAxisCount: 2,
-                            mainAxisSpacing: 12,
-                            crossAxisSpacing: 12,
-                            childAspectRatio: 0.75,
-                            children: _filteredProducts
-                                .map((p) => ProductCard(
-                                      name: p['name'],
-                                      price: p['price'],
-                                      rating: p['rating'],
-                                      icon: p['icon'],
-                                      onTap: () => Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                              builder: (_) =>
-                                                  const ProductDetailScreen())),
-                                    ))
-                                .toList(),
-                          ),
+                      _isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : _filteredProducts.isEmpty
+                              ? Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(40),
+                                    child: Text('No products found',
+                                        style: GoogleFonts.poppins(
+                                            color: AppTheme.textSecondary)),
+                                  ),
+                                )
+                              : GridView.count(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  crossAxisCount: 2,
+                                  mainAxisSpacing: 12,
+                                  crossAxisSpacing: 12,
+                                  childAspectRatio: 0.75,
+                                  children: _filteredProducts
+                                      .map((p) => ProductCard(
+                                            name: p['title'] ?? '',
+                                            price: ApiService.formatPrice(p['price']),
+                                            rating: 4.0,
+                                            icon: _categoryIcon(p['category'] ?? ''),
+                                            onTap: () => Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (_) => ProductDetailScreen(
+                                                          listingId: p['id'],
+                                                          productName: p['title'],
+                                                          price: ApiService.formatPrice(p['price']),
+                                                          priceAmount: p['price'],
+                                                          sellerName: p['seller_name'],
+                                                          category: p['category'],
+                                                          condition: p['condition'],
+                                                          description: p['description'],
+                                                        ))),
+                                          ))
+                                      .toList(),
+                                ),
                     const SizedBox(height: 20),
                   ],
                 ),
@@ -168,7 +203,7 @@ class _BuyScreenState extends State<BuyScreen> {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text('Hello, Buyer 1',
+            child: Text('Hello, $_username',
                 style: GoogleFonts.poppins(
                     fontWeight: FontWeight.w600,
                     fontSize: 15,
@@ -224,8 +259,10 @@ class _BuyScreenState extends State<BuyScreen> {
           child: Padding(
             padding: const EdgeInsets.only(right: 8),
             child: GestureDetector(
-              onTap: () => setState(
-                  () => _selectedCategory = _selectedCategory == i ? -1 : i),
+              onTap: () {
+                setState(() => _selectedCategory = _selectedCategory == i ? -1 : i);
+                _loadListings();
+              },
               child: CategoryChip(
                 icon: cats[i].$2,
                 label: cats[i].$1,

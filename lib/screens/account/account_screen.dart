@@ -7,9 +7,36 @@ import 'payment_method_screen.dart';
 import 'help_center_screen.dart';
 import '../home/favorites_screen.dart';
 import '../../services/api_service.dart';
+import '../home/my_orders_screen.dart';
+import '../chat/chats_list_screen.dart';
 
-class AccountScreen extends StatelessWidget {
+class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
+
+  @override
+  State<AccountScreen> createState() => _AccountScreenState();
+}
+
+class _AccountScreenState extends State<AccountScreen> {
+
+  String _username = 'User';
+  String _email = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    final result = await ApiService.getProfile();
+    if (result['success']) {
+      setState(() {
+        _username = result['data']['name'] ?? 'User';
+        _email = result['data']['email'] ?? '';
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +47,6 @@ class AccountScreen extends StatelessWidget {
           child: Column(
             children: [
               // Profile header
-// Profile header
               Container(
                 color: Colors.white,
                 padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
@@ -36,18 +62,14 @@ class AccountScreen extends StatelessWidget {
                       child: const Icon(Icons.person, color: Colors.white, size: 48),
                     ),
                     const SizedBox(height: 12),
-                    Text('Buyer 1',
+                    Text(_username,
                         style: GoogleFonts.poppins(
                             fontWeight: FontWeight.w700,
                             fontSize: 18,
                             color: AppTheme.textPrimary)),
-                    Text('Buyerland@gmail.com',
+                    Text(_email,
                         style: GoogleFonts.poppins(
                             fontSize: 13, color: AppTheme.textSecondary)),
-                    // Phone number
-                    Text('+62 812-3456-7890',
-                        style: GoogleFonts.poppins(
-                            fontSize: 12, color: AppTheme.textSecondary)),
                   ],
                 ),
               ),
@@ -63,6 +85,20 @@ class AccountScreen extends StatelessWidget {
                       label: 'Edit Profile',
                       onTap: () => Navigator.push(context,
                           MaterialPageRoute(builder: (_) => const EditProfileScreen())),
+                    ),
+                    const Divider(height: 1, indent: 16, endIndent: 16),
+                    _MenuItem(
+                      icon: Icons.shopping_bag_outlined,
+                      label: 'My Orders',
+                      onTap: () => Navigator.push(context,
+                          MaterialPageRoute(builder: (_) => const MyOrdersScreen())),
+                    ),
+                    const Divider(height: 1, indent: 16, endIndent: 16),
+                    _MenuItem(
+                      icon: Icons.chat_bubble_outline,
+                      label: 'Messages',
+                      onTap: () => Navigator.push(context,
+                          MaterialPageRoute(builder: (_) => const ChatsListScreen())),
                     ),
                     const Divider(height: 1, indent: 16, endIndent: 16),
                     _MenuItem(
@@ -146,7 +182,9 @@ class AccountScreen extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: () async {
                     await ApiService.clearToken();
-                    Navigator.pushReplacementNamed(context, '/login');
+                    if (mounted) {
+                      Navigator.pushReplacementNamed(context, '/login');
+                    }
                   },
                   icon: const Icon(Icons.logout, size: 18),
                   label: Text('Logout',
@@ -172,7 +210,8 @@ class _MenuItem extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
 
-  const _MenuItem({required this.icon, required this.label, required this.onTap});
+  const _MenuItem(
+      {required this.icon, required this.label, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -187,7 +226,8 @@ class _MenuItem extends StatelessWidget {
         child: Icon(icon, color: AppTheme.primary, size: 20),
       ),
       title: Text(label,
-          style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500)),
+          style:
+              GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500)),
       trailing: const Icon(Icons.chevron_right,
           color: AppTheme.textSecondary, size: 20),
       onTap: onTap,
@@ -200,7 +240,8 @@ class _EcoStat extends StatelessWidget {
   final String value;
   final Color? valueColor;
 
-  const _EcoStat({required this.label, required this.value, this.valueColor});
+  const _EcoStat(
+      {required this.label, required this.value, this.valueColor});
 
   @override
   Widget build(BuildContext context) {

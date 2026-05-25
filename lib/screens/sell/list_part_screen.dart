@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-// NEW: Added services.dart for the FilteringTextInputFormatter
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../theme/app_theme.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import '../../services/api_service.dart';
 
 class ListPartScreen extends StatefulWidget {
   const ListPartScreen({super.key});
@@ -19,6 +19,7 @@ class _ListPartScreenState extends State<ListPartScreen> {
   final _descCtrl = TextEditingController();
   int _selectedCategory = -1;
   String _selectedCondition = 'Refurbished';
+  bool _isLoading = false;
 
   // NEW: Added state variable for storing selected photos
   final List<File> _photos = [];
@@ -40,21 +41,37 @@ class _ListPartScreenState extends State<ListPartScreen> {
     super.dispose();
   }
 
-  void _submit() {
-    if (_nameCtrl.text.isEmpty) {
-      _showError('Please enter a part name');
-      return;
+  void _submit() async {
+    if (_nameCtrl.text.isEmpty) { _showError('Please enter a part name'); return; }
+    if (_priceCtrl.text.isEmpty) { _showError('Please enter a price'); return; }
+    if (_selectedCategory == -1) { _showError('Please select a category'); return; }
+
+    setState(() => _isLoading = true);
+
+    final cats = ['LCD', 'Battery', 'Camera', 'Back Cover'];
+    final result = await ApiService.createListing(
+      title: _nameCtrl.text.trim(),
+      price: int.tryParse(_priceCtrl.text.trim()) ?? 0,
+      category: cats[_selectedCategory],
+      condition: _selectedCondition,
+      description: _descCtrl.text.trim(),
+    );
+
+    setState(() => _isLoading = false);
+
+    if (result['success']) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Listing created successfully!',
+            style: GoogleFonts.poppins(fontSize: 13)),
+        backgroundColor: AppTheme.success,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        margin: const EdgeInsets.all(16),
+      ));
+      if (mounted) Navigator.pop(context);
+    } else {
+      _showError(result['message']);
     }
-    if (_priceCtrl.text.isEmpty) {
-      _showError('Please enter a price');
-      return;
-    }
-    if (_selectedCategory == -1) {
-      _showError('Please select a category');
-      return;
-    }
-    // TODO: call backend submit listing API
-    Navigator.pop(context);
   }
 
   void _showError(String msg) {
@@ -304,9 +321,15 @@ class _ListPartScreenState extends State<ListPartScreen> {
                   const SizedBox(height: 24),
 
                   ElevatedButton(
-                    onPressed: _submit,
-                    child: Text('Submit Listing',
-                        style: GoogleFonts.poppins(fontWeight: FontWeight.w700)),
+                    onPressed: _isLoading ? null : _submit,
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          )
+                        : Text('Submit Listing',
+                            style: GoogleFonts.poppins(fontWeight: FontWeight.w700)),
                   ),
                 ],
               ),

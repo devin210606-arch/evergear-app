@@ -3,8 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/category_chip.dart';
 import '../home/main_shell.dart';
-import 'list_part_screen.dart';
 import '../home/product_detail_screen.dart';
+import '../../services/api_service.dart';
+import 'list_part_screen.dart';
 
 class SellScreen extends StatefulWidget {
   const SellScreen({super.key});
@@ -15,12 +16,71 @@ class SellScreen extends StatefulWidget {
 
 class _SellScreenState extends State<SellScreen> {
   int _selectedCategory = -1;
+  String _username = 'User';
+  List<Map<String, dynamic>> _myListings = [];
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       setState(() => _selectedCategory = -1);
     });
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+    final profileResult = await ApiService.getProfile();
+    if (profileResult['success']) {
+      setState(() => _username = profileResult['data']['name'] ?? 'User');
+    }
+    final listingsResult = await ApiService.getMyListings();
+    if (listingsResult['success']) {
+      setState(() {
+        _myListings = List<Map<String, dynamic>>.from(listingsResult['data']);
+      });
+    }
+    setState(() => _isLoading = false);
+  }
+
+  List<Map<String, dynamic>> get _filteredListings {
+    if (_selectedCategory == -1) return _myListings;
+    final cats = ['LCD', 'Battery', 'Camera', 'Back Cover'];
+    return _myListings
+        .where((l) => l['category'] == cats[_selectedCategory])
+        .toList();
+  }
+
+  IconData _categoryIcon(String category) {
+    switch (category) {
+      case 'LCD': return Icons.phone_android;
+      case 'Battery': return Icons.battery_full;
+      case 'Camera': return Icons.camera_alt_outlined;
+      case 'Back Cover': return Icons.smartphone;
+      default: return Icons.devices;
+    }
+  }
+
+  Color _statusColor(String status) {
+    switch (status) {
+      case 'sold': return AppTheme.success;
+      case 'in_progress': return AppTheme.warning;
+      default: return AppTheme.primary;
+    }
+  }
+
+  String _statusLabel(String status) {
+    switch (status) {
+      case 'sold': return 'Sold';
+      case 'in_progress': return 'In Progress';
+      default: return 'Available';
+    }
   }
 
   @override
@@ -32,91 +92,143 @@ class _SellScreenState extends State<SellScreen> {
           children: [
             _buildHeader(context),
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextField(
-                      decoration: InputDecoration(
-                        hintText: 'search anything',
-                        prefixIcon: const Icon(Icons.search, color: AppTheme.textSecondary),
-                        filled: true,
-                        fillColor: Colors.white,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : RefreshIndicator(
+                      onRefresh: _loadData,
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Search bar
+                            TextField(
+                              decoration: InputDecoration(
+                                hintText: 'search anything',
+                                prefixIcon: const Icon(Icons.search,
+                                    color: AppTheme.textSecondary),
+                                filled: true,
+                                fillColor: Colors.white,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: const BorderSide(
+                                      color: Color(0xFFE5E7EB)),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: const BorderSide(
+                                      color: Color(0xFFE5E7EB)),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 12),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+
+                            Text('Your Inventory',
+                                style: GoogleFonts.poppins(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.textPrimary)),
+                            const SizedBox(height: 12),
+
+                            // Categories
+                            Row(
+                              children: [
+                                ('LCD', Icons.phone_android),
+                                ('Battery', Icons.battery_full),
+                                ('Camera', Icons.camera_alt_outlined),
+                                ('Back Cover', Icons.smartphone),
+                              ].asMap().entries.map((e) => Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: GestureDetector(
+                                    onTap: () => setState(() =>
+                                        _selectedCategory =
+                                            _selectedCategory == e.key
+                                                ? -1
+                                                : e.key),
+                                    child: CategoryChip(
+                                      icon: e.value.$2,
+                                      label: e.value.$1,
+                                      isSelected: _selectedCategory == e.key,
+                                    ),
+                                  ),
+                                ),
+                              )).toList(),
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Inventory items
+                            if (_filteredListings.isEmpty)
+                              Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(40),
+                                  child: Column(
+                                    children: [
+                                      const Icon(Icons.inventory_2_outlined,
+                                          size: 48,
+                                          color: AppTheme.textSecondary),
+                                      const SizedBox(height: 12),
+                                      Text('No listings yet',
+                                          style: GoogleFonts.poppins(
+                                              color: AppTheme.textSecondary,
+                                              fontWeight: FontWeight.w500)),
+                                      const SizedBox(height: 6),
+                                      Text('Tap the button below to list a part!',
+                                          style: GoogleFonts.poppins(
+                                              color: AppTheme.textSecondary,
+                                              fontSize: 12)),
+                                    ],
+                                  ),
+                                ),
+                              )
+                            else
+                              ..._filteredListings.map((listing) => Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: _InventoryItem(
+                                  name: listing['title'] ?? '',
+                                  price: ApiService.formatPrice(listing['price']),
+                                  status: listing['status'] ?? 'available',
+                                  statusColor: _statusColor(listing['status'] ?? 'available'),
+                                  statusLabel: _statusLabel(listing['status'] ?? 'available'),
+                                  icon: _categoryIcon(listing['category'] ?? ''),
+                                  onTap: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => ProductDetailScreen(
+                                        isMine: true,
+                                        listingId: listing['id'],
+                                        productName: listing['title'],
+                                        price: ApiService.formatPrice(listing['price']),
+                                        priceAmount: listing['price'],
+                                        sellerName: _username,
+                                        category: listing['category'] ?? '',
+                                        condition: listing['condition'] ?? '',
+                                        description: listing['description'],
+                                      ),
+                                    ),
+                                  ).then((_) => _loadData()),
+                                ),
+                              )),
+                            const SizedBox(height: 20),
+
+                            ElevatedButton.icon(
+                              onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => const ListPartScreen()),
+                              ).then((_) => _loadData()),
+                              icon: const Icon(Icons.add),
+                              label: Text('List a New Part',
+                                  style: GoogleFonts.poppins(
+                                      fontWeight: FontWeight.w600)),
+                            ),
+                          ],
                         ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       ),
                     ),
-                    const SizedBox(height: 20),
-
-                    Text('Your Inventory',
-                        style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.textPrimary)),
-                    const SizedBox(height: 12),
-
-                    // Categories
-                    Row(
-                      children: [
-                        ('LCD', Icons.phone_android),
-                        ('Battery', Icons.battery_full),
-                        ('Camera', Icons.camera_alt_outlined),
-                        ('Back Cover', Icons.smartphone),
-                      ].asMap().entries.map((e) => Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: GestureDetector(
-                            onTap: () => setState(() =>
-                                _selectedCategory = _selectedCategory == e.key ? -1 : e.key),
-                            child: CategoryChip(
-                              icon: e.value.$2,
-                              label: e.value.$1,
-                              isSelected: _selectedCategory == e.key,
-                            ),
-                          ),
-                        ),
-                      )).toList(),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Inventory items
-                    ...[
-                      {'name': 'Google Pixel 7 Camera', 'price': 'Rp. 120.000', 'status': 'In Progress', 'statusColor': AppTheme.warning, 'icon': Icons.camera, 'category': 2},
-                      {'name': 'Google P8 Battery', 'price': 'Rp. 120.000', 'status': 'Sold', 'statusColor': AppTheme.success, 'icon': Icons.battery_full, 'category': 1},
-                      {'name': 'Samsung LCD A54', 'price': 'Rp. 95.000', 'status': 'In Progress', 'statusColor': AppTheme.warning, 'icon': Icons.phone_android, 'category': 0},
-                    ].where((item) => _selectedCategory == -1 || item['category'] == _selectedCategory)
-                     .map((item) => Padding(
-                       padding: const EdgeInsets.only(bottom: 12),
-                       child: _InventoryItem(
-                         name: item['name'] as String,
-                         price: item['price'] as String,
-                         status: item['status'] as String,
-                         statusColor: item['statusColor'] as Color,
-                         icon: item['icon'] as IconData,
-                         onTap: () => Navigator.push(context,
-                          MaterialPageRoute(builder: (_) => const ProductDetailScreen(isMine: true))),
-                       ),
-                     )),
-                    const SizedBox(height: 8),
-
-                    ElevatedButton.icon(
-                      onPressed: () => Navigator.push(context,
-                          MaterialPageRoute(builder: (_) => const ListPartScreen())),
-                      icon: const Icon(Icons.add),
-                      label: Text('List a New Part',
-                          style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-                    ),
-                  ],
-                ),
-              ),
             ),
           ],
         ),
@@ -144,7 +256,7 @@ class _SellScreenState extends State<SellScreen> {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text('Hello, Buyer 1',
+            child: Text('Hello, $_username',
                 style: GoogleFonts.poppins(
                     fontWeight: FontWeight.w600,
                     fontSize: 15,
@@ -191,6 +303,7 @@ class _InventoryItem extends StatelessWidget {
   final String price;
   final String status;
   final Color statusColor;
+  final String statusLabel;
   final IconData icon;
   final VoidCallback onTap;
 
@@ -199,6 +312,7 @@ class _InventoryItem extends StatelessWidget {
     required this.price,
     required this.status,
     required this.statusColor,
+    required this.statusLabel,
     required this.icon,
     required this.onTap,
   });
@@ -223,35 +337,19 @@ class _InventoryItem extends StatelessWidget {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
                           color: statusColor.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(6),
                         ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.chat_bubble_outline, size: 10, color: statusColor),
-                            const SizedBox(width: 4),
-                            Text('Conversation',
-                                style: GoogleFonts.poppins(
-                                    fontSize: 10,
-                                    color: statusColor,
-                                    fontWeight: FontWeight.w500)),
-                          ],
+                        child: Text(
+                          statusLabel,
+                          style: GoogleFonts.poppins(
+                              fontSize: 10,
+                              color: statusColor,
+                              fontWeight: FontWeight.w600),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: statusColor.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text('Status: $status',
-                            style: GoogleFonts.poppins(
-                                fontSize: 10,
-                                color: statusColor,
-                                fontWeight: FontWeight.w600)),
                       ),
                     ],
                   ),
@@ -259,18 +357,11 @@ class _InventoryItem extends StatelessWidget {
                   Text(name,
                       style: GoogleFonts.poppins(
                           fontWeight: FontWeight.w600, fontSize: 13)),
-                  Row(
-                    children: [
-                      Text(price,
-                          style: GoogleFonts.poppins(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.primary)),
-                      const SizedBox(width: 4),
-                      const Icon(Icons.star, size: 12, color: Colors.amber),
-                      Text(' 5.0', style: GoogleFonts.poppins(fontSize: 11)),
-                    ],
-                  ),
+                  Text(price,
+                      style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.primary)),
                 ],
               ),
             ),
