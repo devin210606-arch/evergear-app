@@ -12,4 +12,5 @@ build/
 # Environment
 .env
 
+.DS_Store
 
