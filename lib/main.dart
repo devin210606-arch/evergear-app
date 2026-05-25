@@ -11,6 +11,8 @@ import 'screens/home/wallet_screen.dart';
 import 'screens/home/payment_screen.dart';
 import 'screens/home/product_detail_screen.dart';
 import 'screens/home/main_shell.dart';
+import 'screens/home/my_orders_screen.dart';
+import 'screens/chat/chats_list_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,6 +45,8 @@ class EverGearApp extends StatelessWidget {
         '/wallet': (_) => const WalletScreen(),
         '/payment': (_) => const PaymentScreen(),
         '/product-detail': (_) => const ProductDetailScreen(),
+        '/my-orders': (_) => const MyOrdersScreen(),
+        '/messages': (_) => const ChatsListScreen(),
        
       },
     );

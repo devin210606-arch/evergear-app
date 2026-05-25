@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/social_button.dart';
+import '../../services/api_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,6 +16,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   bool _obscurePass = true;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -22,28 +25,28 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-void _login() {
+
+
+void _login() async {
   final email = _emailCtrl.text.trim();
   final password = _passCtrl.text.trim();
 
-  if (email.isEmpty) {
-    _showError('Please enter your email');
-    return;
-  }
-  if (!email.contains('@') || !email.contains('.')) {
-    _showError('Please enter a valid email');
-    return;
-  }
-  if (password.isEmpty) {
-    _showError('Please enter your password');
-    return;
-  }
-  if (password.length < 6) {
-    _showError('Password must be at least 6 characters');
-    return;
-  }
+  if (email.isEmpty) { _showError('Please enter your email'); return; }
+  if (!email.contains('@') || !email.contains('.')) { _showError('Please enter a valid email'); return; }
+  if (password.isEmpty) { _showError('Please enter your password'); return; }
+  if (password.length < 6) { _showError('Password must be at least 6 characters'); return; }
 
-  Navigator.pushReplacementNamed(context, '/main');
+  setState(() => _isLoading = true);
+
+final result = await ApiService.login(email: email, password: password);
+print('LOGIN RESULT: $result'); 
+setState(() => _isLoading = false);
+
+  if (result['success']) {
+    Navigator.pushReplacementNamed(context, '/main');
+  } else {
+    _showError(result['message']);
+  }
 }
 
 void _showError(String message) {
@@ -127,7 +130,7 @@ void _showError(String message) {
                             controller: _emailCtrl,
                             keyboardType: TextInputType.emailAddress,
                             decoration: const InputDecoration(
-                              hintText: 'Email or Username',
+                              hintText: 'Email',
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -172,15 +175,16 @@ void _showError(String message) {
 
                           // Login button
                           ElevatedButton(
-                            onPressed: _login,
-                            child: Text(
-                              'LOGIN',
-                              style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 1.5,
-                              ),
+                              onPressed: _isLoading ? null : _login,
+                                child: _isLoading
+                                    ? const SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                      )
+                                    : Text('LOGIN',
+                                        style: GoogleFonts.poppins(fontWeight: FontWeight.w700, letterSpacing: 1.5)),
                             ),
-                          ),
                           const SizedBox(height: 20),
 
                           // OR divider

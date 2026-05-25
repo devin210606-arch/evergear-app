@@ -8,7 +8,27 @@ import '../../models/favorites_model.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final bool isMine;
-  const ProductDetailScreen({super.key, this.isMine = false});
+  final int listingId;
+  final String productName;
+  final String price;
+  final int priceAmount;
+  final String sellerName;
+  final String category;
+  final String condition;
+  final String? description;
+
+  const ProductDetailScreen({
+    super.key,
+    this.isMine = false,
+    this.listingId = 0,
+    this.productName = 'Product',
+    this.price = 'Rp. 0',
+    this.priceAmount = 0,
+    this.sellerName = 'Seller',
+    this.category = '',
+    this.condition = '',
+    this.description,
+  });
 
   @override
   State<ProductDetailScreen> createState() => _ProductDetailScreenState();
@@ -18,10 +38,20 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   bool _isFavorited = false;
 
   @override
-void initState() {
-  super.initState();
-  _isFavorited = FavoritesModel.isFavorited('Iphone 17 Camera');
-}
+  void initState() {
+    super.initState();
+    _isFavorited = FavoritesModel.isFavorited(widget.productName);
+  }
+
+  IconData _categoryIcon(String category) {
+    switch (category) {
+      case 'LCD': return Icons.phone_android;
+      case 'Battery': return Icons.battery_full;
+      case 'Camera': return Icons.camera_alt_outlined;
+      case 'Back Cover': return Icons.smartphone;
+      default: return Icons.devices;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,25 +66,25 @@ void initState() {
         ),
         actions: [
           if (!widget.isMine)
-          IconButton(
-            icon: Icon(
-              _isFavorited ? Icons.favorite : Icons.favorite_border,
-              color: _isFavorited ? Colors.red : null,
+            IconButton(
+              icon: Icon(
+                _isFavorited ? Icons.favorite : Icons.favorite_border,
+                color: _isFavorited ? Colors.red : null,
+              ),
+              onPressed: () {
+                setState(() => _isFavorited = !_isFavorited);
+                if (_isFavorited) {
+                  FavoritesModel.add({
+                    'name': widget.productName,
+                    'price': widget.price,
+                    'rating': 4.0,
+                    'icon': _categoryIcon(widget.category),
+                  });
+                } else {
+                  FavoritesModel.remove(widget.productName);
+                }
+              },
             ),
-            onPressed: () {
-              setState(() => _isFavorited = !_isFavorited);
-              if (_isFavorited) {
-                FavoritesModel.add({
-                  'name': 'Iphone 17 Camera',
-                  'price': 'Rp. 200.000',
-                  'rating': 3.9,
-                  'icon': Icons.camera_alt,
-                });
-              } else {
-                FavoritesModel.remove('Iphone 17 Camera');
-              }
-            },
-          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -66,7 +96,11 @@ void initState() {
               width: double.infinity,
               height: 280,
               color: Colors.white,
-              child: const Icon(Icons.camera_alt, size: 100, color: AppTheme.primary),
+              child: Icon(
+                _categoryIcon(widget.category),
+                size: 100,
+                color: AppTheme.primary,
+              ),
             ),
 
             Padding(
@@ -79,11 +113,11 @@ void initState() {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
-                        child: Text('Iphone 17 Camera',
+                        child: Text(widget.productName,
                             style: GoogleFonts.poppins(
                                 fontSize: 18, fontWeight: FontWeight.bold)),
                       ),
-                      Text('Rp. 200.000',
+                      Text(widget.price,
                           style: GoogleFonts.poppins(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -96,16 +130,17 @@ void initState() {
                   Row(
                     children: [
                       const Icon(Icons.star, size: 16, color: Colors.amber),
-                      Text(' 3.9  •  ',
+                      Text(' 4.0  •  ',
                           style: GoogleFonts.poppins(
                               fontSize: 13, color: AppTheme.textSecondary)),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
                           color: AppTheme.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(6),
                         ),
-                        child: Text('Refurbished',
+                        child: Text(widget.condition,
                             style: GoogleFonts.poppins(
                                 fontSize: 11,
                                 color: AppTheme.primary,
@@ -121,7 +156,7 @@ void initState() {
                           fontSize: 15, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 6),
                   Text(
-                    'High quality refurbished camera module for iPhone 17. Fully tested and guaranteed to work. Comes with 30 day warranty. Perfect replacement for cracked or damaged camera.',
+                    widget.description ?? 'No description provided.',
                     style: GoogleFonts.poppins(
                         fontSize: 13,
                         color: AppTheme.textSecondary,
@@ -159,7 +194,7 @@ void initState() {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Seller Name',
+                                Text(widget.sellerName,
                                     style: GoogleFonts.poppins(
                                         fontWeight: FontWeight.w600,
                                         fontSize: 13)),
@@ -171,7 +206,8 @@ void initState() {
                             ),
                           ),
                           OutlinedButton(
-                            onPressed: () => Navigator.push(context,
+                            onPressed: () => Navigator.push(
+                                context,
                                 MaterialPageRoute(
                                     builder: (_) => const ChatScreen())),
                             style: OutlinedButton.styleFrom(
@@ -252,8 +288,10 @@ void initState() {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () => Navigator.push(context,
-                         MaterialPageRoute(builder: (_) => const EditListingScreen())),
+                      onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const EditListingScreen())),
                       icon: const Icon(Icons.edit_outlined, size: 18),
                       label: Text('Edit Listing',
                           style: GoogleFonts.poppins(
@@ -263,12 +301,19 @@ void initState() {
                 ],
               )
             : ElevatedButton(
-                onPressed: () => Navigator.push(context,
+                onPressed: () => Navigator.push(
+                    context,
                     MaterialPageRoute(
-                        builder: (_) => const PaymentScreen())),
+                        builder: (_) => PaymentScreen(
+                              listingId: widget.listingId,
+                              productName: widget.productName,
+                              price: widget.price,
+                              priceAmount: widget.priceAmount,
+                            ))),
                 child: Text('Buy Now',
                     style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.w700, letterSpacing: 1.2)),
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.2)),
               ),
       ),
     );
@@ -278,7 +323,8 @@ void initState() {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16)),
         title: Text('Delete Listing',
             style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
         content: Text('Are you sure you want to delete this listing?',
@@ -293,8 +339,11 @@ void initState() {
               Navigator.pop(context);
               Navigator.pop(context);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
-            child: Text('Delete', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+            style:
+                ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
+            child: Text('Delete',
+                style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w600)),
           ),
         ],
       ),

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/social_button.dart';
+import '../../services/api_service.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -17,6 +19,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _confirmPassCtrl = TextEditingController();
   bool _obscurePass = true;
   bool _obscureConfirm = true;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -27,22 +30,39 @@ class _SignUpScreenState extends State<SignUpScreen> {
     super.dispose();
   }
 
-  void _register() {
-    final name = _nameCtrl.text.trim();
-    final email = _emailCtrl.text.trim();
-    final password = _passCtrl.text.trim();
-    final confirm = _confirmPassCtrl.text.trim();
+  void _register() async {
+  final name = _nameCtrl.text.trim();
+  final email = _emailCtrl.text.trim();
+  final password = _passCtrl.text.trim();
+  final confirm = _confirmPassCtrl.text.trim();
 
-    if (name.isEmpty) { _showError('Please enter your name'); return; }
-    if (email.isEmpty || !email.contains('@') || !email.contains('.')) {
-      _showError('Please enter a valid email'); return;
-    }
-    if (password.length < 6) { _showError('Password must be at least 6 characters'); return; }
-    if (password != confirm) { _showError('Passwords do not match'); return; }
-
-    // TODO: call backend register API
-    Navigator.pushReplacementNamed(context, '/main');
+  if (name.isEmpty) { _showError('Please enter your name'); return; }
+  if (email.isEmpty || !email.contains('@') || !email.contains('.')) {
+    _showError('Please enter a valid email'); return;
   }
+  if (password.length < 6) { _showError('Password must be at least 6 characters'); return; }
+  if (password != confirm) { _showError('Passwords do not match'); return; }
+
+  setState(() => _isLoading = true);
+
+  final result = await ApiService.register(
+    name: name,
+    email: email,
+    password: password,
+  );
+
+  setState(() => _isLoading = false);
+
+  if (result['success']) {
+    // Auto login after register
+    final loginResult = await ApiService.login(email: email, password: password);
+    if (loginResult['success']) {
+      Navigator.pushReplacementNamed(context, '/main');
+    }
+  } else {
+    _showError(result['message']);
+  }
+}
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -170,10 +190,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                         // Register button
                         ElevatedButton(
-                          onPressed: _register,
-                          child: Text('REGISTER',
-                              style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w700, letterSpacing: 1.5)),
+                          onPressed: _isLoading ? null : _register,
+                          child: _isLoading
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                      color: Colors.white, strokeWidth: 2),
+                                )
+                              : Text('REGISTER',
+                                  style: GoogleFonts.poppins(
+                                      fontWeight: FontWeight.w700, letterSpacing: 1.5)),
                         ),
                         const SizedBox(height: 20),
 
@@ -198,11 +225,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            SocialButton(icon: Icons.flutter_dash, color: const Color(0xFF1DA1F2), onTap: () {}),
+                            SocialButton(
+                              icon: FontAwesomeIcons.xTwitter,  
+                              color: const Color(0xFF000000),  
+                              onTap: () {},
+                            ),
                             const SizedBox(width: 16),
-                            SocialButton(icon: Icons.facebook, color: const Color(0xFF1877F2), onTap: () {}),
+                            SocialButton(
+                              icon: FontAwesomeIcons.facebook,  
+                              color: const Color(0xFF1877F2),  
+                              onTap: () {},
+                            ),
                             const SizedBox(width: 16),
-                            SocialButton(icon: Icons.g_mobiledata, color: const Color(0xFFDB4437), onTap: () {}),
+                            SocialButton(
+                              icon: FontAwesomeIcons.google,  
+                              color: const Color(0xFFDB4437),  
+                              onTap: () {},
+                            ),
                           ],
                         ),
                         const SizedBox(height: 20),

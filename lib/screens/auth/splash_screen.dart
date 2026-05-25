@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'package:google_fonts/google_fonts.dart';
 import '../../theme/app_theme.dart';
+import '../../services/api_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -52,10 +53,16 @@ class _SplashScreenState extends State<SplashScreen>
       _textController.forward();
       _progressController.forward();
     });
-
-    Future.delayed(const Duration(milliseconds: 3800), () {
-      if (mounted) Navigator.pushReplacementNamed(context, '/login');
-    });
+  Future.delayed(const Duration(milliseconds: 3800), () async {
+    if (mounted) {
+      final token = await ApiService.getToken();
+      if (token != null && token.isNotEmpty) {
+        Navigator.pushReplacementNamed(context, '/main');
+      } else {
+        Navigator.pushReplacementNamed(context, '/login');
+      }
+    }
+  });
   }
 
   @override

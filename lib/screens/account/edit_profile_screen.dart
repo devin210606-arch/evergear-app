@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../theme/app_theme.dart';
-// NEW: Added the two imports here at the top
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import '../../theme/app_theme.dart';
+import '../../services/api_service.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -13,12 +13,28 @@ class EditProfileScreen extends StatefulWidget {
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
-  final _nameCtrl = TextEditingController(text: 'Buyer 1');
-  final _emailCtrl = TextEditingController(text: 'Buyerland@gmail.com');
-  final _phoneCtrl = TextEditingController(text: '');
-  
-  // NEW: Added the image variable here, with your other state variables
+  final _nameCtrl = TextEditingController();
+  final _emailCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
+  bool _isLoading = false;
   File? _profileImage;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    final result = await ApiService.getProfile();
+    if (result['success']) {
+      setState(() {
+        _nameCtrl.text = result['data']['name'] ?? '';
+        _emailCtrl.text = result['data']['email'] ?? '';
+        _phoneCtrl.text = result['data']['phone'] ?? '';
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -26,6 +42,54 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _emailCtrl.dispose();
     _phoneCtrl.dispose();
     super.dispose();
+  }
+
+  void _showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(msg, style: GoogleFonts.poppins(fontSize: 13)),
+      backgroundColor: AppTheme.error,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      margin: const EdgeInsets.all(16),
+    ));
+  }
+
+  void _showSuccess(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(msg, style: GoogleFonts.poppins(fontSize: 13)),
+      backgroundColor: AppTheme.success,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      margin: const EdgeInsets.all(16),
+    ));
+  }
+
+  Future<void> _save() async {
+    if (_nameCtrl.text.isEmpty) {
+      _showError('Please enter your name');
+      return;
+    }
+    if (_emailCtrl.text.isEmpty || !_emailCtrl.text.contains('@')) {
+      _showError('Please enter a valid email');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    final result = await ApiService.updateProfile(
+      name: _nameCtrl.text.trim(),
+      email: _emailCtrl.text.trim(),
+      phone: _phoneCtrl.text.trim(),
+    );
+
+    setState(() => _isLoading = false);
+
+    if (result['success']) {
+      _showSuccess('Profile updated successfully!');
+      if (mounted) Navigator.pop(context);
+    } else {
+      _showError(result['message']);
+    }
   }
 
   @override
@@ -44,13 +108,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            
-            // NEW: This entire Center block replaced the old avatar code
+            // Avatar
             Center(
               child: GestureDetector(
                 onTap: () async {
                   final picker = ImagePicker();
-                  final picked = await picker.pickImage(source: ImageSource.gallery);
+                  final picked =
+                      await picker.pickImage(source: ImageSource.gallery);
                   if (picked != null) {
                     setState(() => _profileImage = File(picked.path));
                   }
@@ -67,8 +131,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       child: _profileImage != null
                           ? ClipOval(
                               child: Image.file(_profileImage!,
-                                  width: 90, height: 90, fit: BoxFit.cover))
-                          : const Icon(Icons.person, color: Colors.white, size: 52),
+                                  width: 90,
+                                  height: 90,
+                                  fit: BoxFit.cover))
+                          : const Icon(Icons.person,
+                              color: Colors.white, size: 52),
                     ),
                     Positioned(
                       bottom: 0,
@@ -80,15 +147,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           color: AppTheme.primary,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.camera_alt, color: Colors.white, size: 16),
+                        child: const Icon(Icons.camera_alt,
+                            color: Colors.white, size: 16),
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-            // END OF NEW AVATAR CODE
-
             const SizedBox(height: 24),
 
             Container(
@@ -104,35 +170,48 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       style: GoogleFonts.poppins(
                           fontSize: 12, color: AppTheme.textSecondary)),
                   const SizedBox(height: 6),
-                  TextField(controller: _nameCtrl,
-                      decoration: const InputDecoration(hintText: 'Full Name')),
+                  TextField(
+                    controller: _nameCtrl,
+                    decoration:
+                        const InputDecoration(hintText: 'Full Name'),
+                  ),
                   const SizedBox(height: 16),
 
                   Text('Email',
                       style: GoogleFonts.poppins(
                           fontSize: 12, color: AppTheme.textSecondary)),
                   const SizedBox(height: 6),
-                  TextField(controller: _emailCtrl,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(hintText: 'Email')),
+                  TextField(
+                    controller: _emailCtrl,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(hintText: 'Email'),
+                  ),
                   const SizedBox(height: 16),
 
                   Text('Phone Number',
                       style: GoogleFonts.poppins(
                           fontSize: 12, color: AppTheme.textSecondary)),
                   const SizedBox(height: 6),
-                  TextField(controller: _phoneCtrl,
-                      keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(hintText: 'Phone Number')),
+                  TextField(
+                    controller: _phoneCtrl,
+                    keyboardType: TextInputType.phone,
+                    decoration: const InputDecoration(
+                        hintText: 'e.g. +62 812-3456-7890'),
+                  ),
                   const SizedBox(height: 24),
 
                   ElevatedButton(
-                    onPressed: () {
-                      // TODO: call backend update profile API
-                      Navigator.pop(context);
-                    },
-                    child: Text('Save Changes',
-                        style: GoogleFonts.poppins(fontWeight: FontWeight.w700)),
+                    onPressed: _isLoading ? null : _save,
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                                color: Colors.white, strokeWidth: 2),
+                          )
+                        : Text('Save Changes',
+                            style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w700)),
                   ),
                 ],
               ),
