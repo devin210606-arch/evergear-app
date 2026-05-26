@@ -5,6 +5,7 @@ import '../../widgets/category_chip.dart';
 import '../../widgets/product_card.dart';
 import '../../services/api_service.dart';
 import '../home/product_detail_screen.dart';
+import '../../widgets/wallet_header.dart';
 import 'main_shell.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -18,7 +19,10 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedCategory = -1;
   List<Map<String, dynamic>> _popularProducts = [];
   bool _isLoadingProducts = false;
-
+  int _partsSold = 0;
+  int _partsBought = 0;
+  int _co2Reduced = 0;
+  int _savedFromLandfill = 0;
   String _username = 'User';
 
   @override
@@ -26,6 +30,19 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _loadUsername();
     _loadPopularProducts();
+    _loadEcoStats(); // Added this so it actually loads!
+  }
+
+  Future<void> _loadEcoStats() async {
+    final result = await ApiService.getEcoStats();
+    if (result['success']) {
+      setState(() {
+        _partsSold = result['data']['parts_sold'] ?? 0;
+        _partsBought = result['data']['parts_bought'] ?? 0;
+        _co2Reduced = result['data']['co2_reduced_percent'] ?? 0;
+        _savedFromLandfill = result['data']['parts_saved_from_landfill'] ?? 0;
+      });
+    }
   }
 
   Future<void> _loadPopularProducts() async {
@@ -109,65 +126,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHeader(BuildContext context) {
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-      child: Row(
-        children: [
-          // Avatar — taps to My Account
-          GestureDetector(
-            onTap: () => MainShell.of(context)?.switchTab(3),
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: const Color(0xFFE0E7FF),
-                borderRadius: BorderRadius.circular(22),
-              ),
-              child: const Icon(Icons.person, color: AppTheme.primary, size: 26),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text('Hello, $_username',
-                style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
-                    color: AppTheme.textPrimary)),
-          ),
-          // Wallet — taps to wallet page
-          GestureDetector(
-            onTap: () => Navigator.pushNamed(context, '/wallet'),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppTheme.walletBg,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.account_balance_wallet_outlined,
-                      size: 16, color: AppTheme.primary),
-                  const SizedBox(width: 6),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Wallet Balance',
-                          style: GoogleFonts.poppins(
-                              fontSize: 9, color: AppTheme.textSecondary)),
-                      Text('Rp. 888.888',
-                          style: GoogleFonts.poppins(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.textPrimary)),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+    return WalletHeader(
+      username: _username,
+      onAvatarTap: () => MainShell.of(context)?.switchTab(3),
     );
   }
 
@@ -210,7 +171,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               const Icon(Icons.eco_outlined, color: AppTheme.success, size: 18),
               const SizedBox(width: 6),
-              Text("You've saved 120 parts from landfill",
+              Text("You've saved $_savedFromLandfill parts from landfill",
                   style: GoogleFonts.poppins(
                       fontSize: 12,
                       color: AppTheme.textPrimary,
@@ -221,9 +182,9 @@ class _HomeScreenState extends State<HomeScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _EcoStat(label: 'Parts Sold', value: '113'),
-              _EcoStat(label: 'Parts bought', value: '7'),
-              _EcoStat(label: 'CO2 Reduced', value: '7%', valueColor: AppTheme.success),
+             _EcoStat(label: 'Parts Sold', value: '$_partsSold'),
+             _EcoStat(label: 'Parts bought', value: '$_partsBought'),
+             _EcoStat(label: 'CO2 Reduced', value: '$_co2Reduced%', valueColor: AppTheme.success),
             ],
           ),
         ],
@@ -307,7 +268,7 @@ class _HomeScreenState extends State<HomeScreen> {
       )).toList(),
     );
   }
-}
+} // <-- This is where the class SHOULD end!
 
 class _ActionBanner extends StatelessWidget {
   final String title;

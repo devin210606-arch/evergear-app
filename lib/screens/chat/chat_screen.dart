@@ -1,10 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../theme/app_theme.dart';
+import '../../services/api_service.dart';
 import '../home/product_detail_screen.dart';
 
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({super.key});
+  final int conversationId;
+  final String otherUserName;
+  final String productName;
+
+  const ChatScreen({
+    super.key,
+    this.conversationId = 0,
+    this.otherUserName = 'Seller',
+    this.productName = 'Product',
+  });
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -13,13 +23,15 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final _messageCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
+  List<Map<String, dynamic>> _messages = [];
+  bool _isLoading = false;
+  bool _isSending = false;
 
-  final List<Map<String, dynamic>> _messages = [
-    {'text': 'Hi, is this still available?', 'isMe': true},
-    {'text': 'Yes it is! Still in great condition.', 'isMe': false},
-    {'text': 'Can you do Rp. 100.000?', 'isMe': true},
-    {'text': 'Best I can do is Rp. 110.000', 'isMe': false},
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadMessages();
+  }
 
   @override
   void dispose() {
@@ -28,19 +40,49 @@ class _ChatScreenState extends State<ChatScreen> {
     super.dispose();
   }
 
-  void _send() {
-    if (_messageCtrl.text.trim().isEmpty) return;
-    setState(() {
-      _messages.add({'text': _messageCtrl.text.trim(), 'isMe': true});
-      _messageCtrl.clear();
-    });
+  Future<void> _loadMessages() async {
+    if (widget.conversationId == 0) return;
+    setState(() => _isLoading = true);
+    final result = await ApiService.getChatMessages(widget.conversationId);
+    if (result['success']) {
+      setState(() {
+        _messages = List<Map<String, dynamic>>.from(result['data']);
+      });
+      _scrollToBottom();
+    }
+    setState(() => _isLoading = false);
+  }
+
+  void _scrollToBottom() {
     Future.delayed(const Duration(milliseconds: 100), () {
-      _scrollCtrl.animateTo(
-        _scrollCtrl.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
+      if (_scrollCtrl.hasClients) {
+        _scrollCtrl.animateTo(
+          _scrollCtrl.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
     });
+  }
+
+  Future<void> _send() async {
+    if (_messageCtrl.text.trim().isEmpty || widget.conversationId == 0) return;
+    
+    final text = _messageCtrl.text.trim();
+    _messageCtrl.clear();
+
+    // Optimistically add message to UI
+    setState(() {
+      _messages.add({'text': text, 'isMe': true});
+    });
+    _scrollToBottom();
+
+    setState(() => _isSending = true);
+    await ApiService.sendMessage(
+      conversationId: widget.conversationId,
+      text: text,
+    );
+    setState(() => _isSending = false);
   }
 
   @override
@@ -63,7 +105,7 @@ class _ChatScreenState extends State<ChatScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Seller Name',
+                Text(widget.otherUserName,
                     style: GoogleFonts.poppins(
                         fontWeight: FontWeight.w600, fontSize: 14)),
                 Text('Online',
@@ -93,83 +135,82 @@ class _ChatScreenState extends State<ChatScreen> {
                     color: const Color(0xFFF3F4F6),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.camera_alt,
+                  child: const Icon(Icons.devices,
                       color: AppTheme.primary, size: 24),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Iphone 17 Camera',
-                          style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w600, fontSize: 13)),
-                      Text('Rp. 200.000',
-                          style: GoogleFonts.poppins(
-                              fontSize: 13,
-                              color: AppTheme.primary,
-                              fontWeight: FontWeight.w700)),
-                    ],
-                  ),
+                  child: Text(widget.productName,
+                      style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w600, fontSize: 13)),
                 ),
                 OutlinedButton(
-                  onPressed: () => Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => const ProductDetailScreen())),
+                  onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const ProductDetailScreen())),
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size(60, 32),
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                   ),
-                  child: Text('View', style: GoogleFonts.poppins(fontSize: 12)),
+                  child: Text('View',
+                      style: GoogleFonts.poppins(fontSize: 12)),
                 ),
               ],
             ),
           ),
-
+          
           // Messages
           Expanded(
-            child: ListView.builder(
-              controller: _scrollCtrl,
-              padding: const EdgeInsets.all(16),
-              itemCount: _messages.length,
-              itemBuilder: (context, i) {
-                final msg = _messages[i];
-                final isMe = msg['isMe'] as bool;
-                return Align(
-                  alignment:
-                      isMe ? Alignment.centerRight : Alignment.centerLeft,
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 10),
-                    constraints: BoxConstraints(
-                        maxWidth: MediaQuery.of(context).size.width * 0.7),
-                    decoration: BoxDecoration(
-                      color: isMe ? AppTheme.primary : Colors.white,
-                      borderRadius: BorderRadius.only(
-                        topLeft: const Radius.circular(16),
-                        topRight: const Radius.circular(16),
-                        bottomLeft: Radius.circular(isMe ? 16 : 4),
-                        bottomRight: Radius.circular(isMe ? 4 : 16),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 4,
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
+                    controller: _scrollCtrl,
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _messages.length,
+                    itemBuilder: (context, i) {
+                      final msg = _messages[i];
+                      final isMe = msg['isMe'] as bool? ?? false;
+                      return Align(
+                        alignment: isMe
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 10),
+                          constraints: BoxConstraints(
+                              maxWidth:
+                                  MediaQuery.of(context).size.width * 0.7),
+                          decoration: BoxDecoration(
+                            color: isMe ? AppTheme.primary : Colors.white,
+                            borderRadius: BorderRadius.only(
+                              topLeft: const Radius.circular(16),
+                              topRight: const Radius.circular(16),
+                              bottomLeft: Radius.circular(isMe ? 16 : 4),
+                              bottomRight: Radius.circular(isMe ? 4 : 16),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 4,
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            msg['text'] ?? '',
+                            style: GoogleFonts.poppins(
+                                fontSize: 13,
+                                color: isMe
+                                    ? Colors.white
+                                    : AppTheme.textPrimary),
+                          ),
                         ),
-                      ],
-                    ),
-                    child: Text(
-                      msg['text'],
-                      style: GoogleFonts.poppins(
-                          fontSize: 13,
-                          color: isMe ? Colors.white : AppTheme.textPrimary),
-                    ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           ),
-
+          
           // Input bar
           Container(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -190,6 +231,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 10),
                     ),
+                    onSubmitted: (_) => _send(),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -202,7 +244,13 @@ class _ChatScreenState extends State<ChatScreen> {
                       color: AppTheme.primary,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.send, color: Colors.white, size: 20),
+                    child: _isSending
+                        ? const Padding(
+                            padding: EdgeInsets.all(12),
+                            child: CircularProgressIndicator(
+                                color: Colors.white, strokeWidth: 2),
+                          )
+                        : const Icon(Icons.send, color: Colors.white, size: 20),
                   ),
                 ),
               ],

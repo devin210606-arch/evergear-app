@@ -6,6 +6,7 @@ import '../home/main_shell.dart';
 import '../home/product_detail_screen.dart';
 import '../../services/api_service.dart';
 import 'list_part_screen.dart';
+import '../../widgets/wallet_header.dart';
 
 class SellScreen extends StatefulWidget {
   const SellScreen({super.key});
@@ -70,7 +71,7 @@ class _SellScreenState extends State<SellScreen> {
   Color _statusColor(String status) {
     switch (status) {
       case 'sold': return AppTheme.success;
-      case 'in_progress': return AppTheme.warning;
+      case 'in_progress': return AppTheme.warning; // Ensure 'warning' exists in AppTheme!
       default: return AppTheme.primary;
     }
   }
@@ -237,63 +238,9 @@ class _SellScreenState extends State<SellScreen> {
   }
 
   Widget _buildHeader(BuildContext context) {
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => MainShell.of(context)?.switchTab(3),
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: const Color(0xFFE0E7FF),
-                borderRadius: BorderRadius.circular(22),
-              ),
-              child: const Icon(Icons.person, color: AppTheme.primary, size: 26),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text('Hello, $_username',
-                style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
-                    color: AppTheme.textPrimary)),
-          ),
-          GestureDetector(
-            onTap: () => Navigator.pushNamed(context, '/wallet'),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppTheme.walletBg,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.account_balance_wallet_outlined,
-                      size: 16, color: AppTheme.primary),
-                  const SizedBox(width: 6),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Wallet Balance',
-                          style: GoogleFonts.poppins(
-                              fontSize: 9, color: AppTheme.textSecondary)),
-                      Text('Rp. 888.888',
-                          style: GoogleFonts.poppins(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.textPrimary)),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+    return WalletHeader(
+      username: _username,
+      onAvatarTap: () => MainShell.of(context)?.switchTab(3),
     );
   }
 }

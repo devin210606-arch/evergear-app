@@ -367,12 +367,190 @@ class ApiService {
     }
   }
 
-  // ─── CHAT ────────────────────────────────────────────────
+  // UPDATE PROFILE
+  static Future<Map<String, dynamic>> updateProfile({
+    required String name,
+    required String email,
+    String? phone,
+  }) async {
+    try {
+      final token = await getToken();
+      final response = await http.put(
+        Uri.parse('$baseUrl/users/me'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'name': name,
+          'email': email,
+          'phone': phone ?? '',
+        }),
+      );
+      print('UPDATE PROFILE STATUS: ${response.statusCode}');
+      print('UPDATE PROFILE BODY: ${response.body}');
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': data};
+      } else {
+        return {'success': false, 'message': data['detail'] ?? 'Failed to update profile'};
+      }
+    } catch (e) {
+      print('UPDATE PROFILE ERROR: $e');
+      return {'success': false, 'message': 'Cannot connect to server'};
+    }
+  }
+
+  // CHANGE PASSWORD
+  static Future<Map<String, dynamic>> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final token = await getToken();
+      final response = await http.put(
+        Uri.parse('$baseUrl/users/me/password'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'current_password': currentPassword,
+          'new_password': newPassword,
+        }),
+      );
+      print('CHANGE PASSWORD STATUS: ${response.statusCode}');
+      print('CHANGE PASSWORD BODY: ${response.body}');
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': data};
+      } else {
+        return {'success': false, 'message': data['detail'] ?? 'Failed to change password'};
+      }
+    } catch (e) {
+      print('CHANGE PASSWORD ERROR: $e');
+      return {'success': false, 'message': 'Cannot connect to server'};
+    }
+  }
+
+  static String formatPrice(dynamic price) {
+    final number = int.tryParse(price.toString()) ?? 0;
+    final formatted = number.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (m) => '${m[1]}.',
+    );
+    return 'Rp. $formatted';
+  }
+
+  // WALLET
+  static Future<Map<String, dynamic>> getWalletBalance() async {
+    try {
+      final token = await getToken();
+      final response = await http.get(
+        Uri.parse('$baseUrl/wallet/'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': data};
+      } else {
+        return {'success': false, 'message': data['detail'] ?? 'Failed'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Cannot connect to server'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> topUpWallet(int amount) async {
+    try {
+      final token = await getToken();
+      final response = await http.post(
+        Uri.parse('$baseUrl/wallet/topup'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'amount': amount}),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': data};
+      } else {
+        return {'success': false, 'message': data['detail'] ?? 'Failed'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Cannot connect to server'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> withdrawWallet({
+    required int amount,
+    required String bankAccount,
+  }) async {
+    try {
+      final token = await getToken();
+      final response = await http.post(
+        Uri.parse('$baseUrl/wallet/withdraw'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'amount': amount, 'bank_account': bankAccount}),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': data};
+      } else {
+        return {'success': false, 'message': data['detail'] ?? 'Failed'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Cannot connect to server'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> getTransactions() async {
+    try {
+      final token = await getToken();
+      final response = await http.get(
+        Uri.parse('$baseUrl/wallet/transactions'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': data};
+      } else {
+        return {'success': false, 'message': data['detail'] ?? 'Failed'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Cannot connect to server'};
+    }
+  }
+
+  // ECO STATS
+  static Future<Map<String, dynamic>> getEcoStats() async {
+    try {
+      final token = await getToken();
+      final response = await http.get(
+        Uri.parse('$baseUrl/users/me/stats'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': data};
+      } else {
+        return {'success': false, 'message': data['detail'] ?? 'Failed'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Cannot connect to server'};
+    }
+  }
+
+  // ─── CHAT (NEW) ──────────────────────────────────────────────
   static Future<Map<String, dynamic>> getMyChats() async {
     try {
       final token = await getToken();
       final response = await http.get(
-        Uri.parse('$baseUrl/chats'),
+        Uri.parse('$baseUrl/chats/'),
         headers: {'Authorization': 'Bearer $token'},
       );
       final data = jsonDecode(response.body);
@@ -386,11 +564,11 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> startChat(int listingId) async {
+  static Future<Map<String, dynamic>> startConversation(int listingId) async {
     try {
       final token = await getToken();
       final response = await http.post(
-        Uri.parse('$baseUrl/chats/$listingId'),
+        Uri.parse('$baseUrl/chats/start/$listingId'),
         headers: {'Authorization': 'Bearer $token'},
       );
       final data = jsonDecode(response.body);
@@ -404,11 +582,11 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> getChatMessages(int chatId) async {
+  static Future<Map<String, dynamic>> getChatMessages(int conversationId) async {
     try {
       final token = await getToken();
       final response = await http.get(
-        Uri.parse('$baseUrl/chats/$chatId/messages'),
+        Uri.parse('$baseUrl/chats/$conversationId/messages'),
         headers: {'Authorization': 'Bearer $token'},
       );
       final data = jsonDecode(response.body);
@@ -423,18 +601,18 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> sendMessage({
-    required int chatId,
-    required String content,
+    required int conversationId,
+    required String text,
   }) async {
     try {
       final token = await getToken();
       final response = await http.post(
-        Uri.parse('$baseUrl/chats/$chatId/messages'),
+        Uri.parse('$baseUrl/chats/$conversationId/messages'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
-        body: jsonEncode({'content': content}),
+        body: jsonEncode({'text': text}),
       );
       final data = jsonDecode(response.body);
       if (response.statusCode == 200) {
@@ -447,78 +625,4 @@ class ApiService {
     }
   }
 
-  // UPDATE PROFILE
-static Future<Map<String, dynamic>> updateProfile({
-  required String name,
-  required String email,
-  String? phone,
-}) async {
-  try {
-    final token = await getToken();
-    final response = await http.put(
-      Uri.parse('$baseUrl/users/me'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'name': name,
-        'email': email,
-        'phone': phone ?? '',
-      }),
-    );
-    print('UPDATE PROFILE STATUS: ${response.statusCode}');
-    print('UPDATE PROFILE BODY: ${response.body}');
-    final data = jsonDecode(response.body);
-    if (response.statusCode == 200) {
-      return {'success': true, 'data': data};
-    } else {
-      return {'success': false, 'message': data['detail'] ?? 'Failed to update profile'};
-    }
-  } catch (e) {
-    print('UPDATE PROFILE ERROR: $e');
-    return {'success': false, 'message': 'Cannot connect to server'};
-  }
-}
-
-// CHANGE PASSWORD
-static Future<Map<String, dynamic>> changePassword({
-  required String currentPassword,
-  required String newPassword,
-}) async {
-  try {
-    final token = await getToken();
-    final response = await http.put(
-      Uri.parse('$baseUrl/users/me/password'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'current_password': currentPassword,
-        'new_password': newPassword,
-      }),
-    );
-    print('CHANGE PASSWORD STATUS: ${response.statusCode}');
-    print('CHANGE PASSWORD BODY: ${response.body}');
-    final data = jsonDecode(response.body);
-    if (response.statusCode == 200) {
-      return {'success': true, 'data': data};
-    } else {
-      return {'success': false, 'message': data['detail'] ?? 'Failed to change password'};
-    }
-  } catch (e) {
-    print('CHANGE PASSWORD ERROR: $e');
-    return {'success': false, 'message': 'Cannot connect to server'};
-  }
-}
-
-static String formatPrice(dynamic price) {
-  final number = int.tryParse(price.toString()) ?? 0;
-  final formatted = number.toString().replaceAllMapped(
-    RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-    (m) => '${m[1]}.',
-  );
-  return 'Rp. $formatted';
-}
 }
