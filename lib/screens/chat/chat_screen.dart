@@ -66,8 +66,8 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _send() async {
-    if (_messageCtrl.text.trim().isEmpty || widget.conversationId == 0) return;
-    
+  if (_messageCtrl.text.trim().isEmpty) return;
+    print('SENDING to conversation: ${widget.conversationId}');
     final text = _messageCtrl.text.trim();
     _messageCtrl.clear();
 

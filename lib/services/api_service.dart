@@ -621,6 +621,7 @@ class ApiService {
         return {'success': false, 'message': data['detail'] ?? 'Failed'};
       }
     } catch (e) {
+      print('SEND MESSAGE ERROR: $e');
       return {'success': false, 'message': 'Cannot connect to server'};
     }
   }
