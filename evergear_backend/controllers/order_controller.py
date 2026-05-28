@@ -32,12 +32,16 @@ def create_order(
     if listing.status != "available":
         raise HTTPException(status_code=400, detail="Listing is not available")
 
-    # 1. NEW: SECURITY CHECK
-    if current_user.wallet_balance < listing.price:
-        raise HTTPException(status_code=400, detail="Insufficient funds in wallet")
+    platform_fee = int(listing.price * 0.01)
+    tax_amount = int(listing.price * 0.10)
+    grand_total = listing.price + platform_fee + tax_amount
 
+    # 1. NEW: SECURITY CHECK
+    if current_user.wallet_balance < grand_total:
+        raise HTTPException(status_code=400, detail="Insufficient funds for item, fee, and tax")
+    
     # 2. NEW: DEDUCT THE MONEY
-    current_user.wallet_balance -= listing.price
+    current_user.wallet_balance -= grand_total
 
     new_order = Order(
         listing_id=listing.id,
@@ -59,8 +63,8 @@ def create_order(
     buyer_transaction = Transaction(
         user_id=current_user.id,
         type="purchase",         
-        amount=-listing.price,   
-        description=f"Bought {listing.title}",
+        amount=-grand_total,   
+        description=f"Bought {listing.title} (Inc. Tax & Fee)",
         status="completed"
     )
     db.add(buyer_transaction)
@@ -155,6 +159,21 @@ def confirm_received(
     if listing:
         listing.status = "sold"
     
+    seller = db.query(User).filter(User.id == order.seller_id).first()
+    if seller:
+        # Give the seller the base item price (They don't get the tax or platform fee)
+        seller.wallet_balance += order.price
+        
+        # Create a receipt for the seller so it shows up in their Wallet Screen!
+        seller_tx = Transaction(
+            user_id=seller.id,
+            type="sale",
+            amount=order.price,
+            description=f"Payment received for {order.product_title}",
+            status="completed"
+        )
+        db.add(seller_tx)
+
     db.commit()
     return {"message": "Order confirmed!", "status": "completed"}
 

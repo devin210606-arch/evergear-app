@@ -21,11 +21,18 @@ class _AccountScreenState extends State<AccountScreen> {
 
   String _username = 'User';
   String _email = '';
+  
+  // Added Eco Stat Variables
+  int _partsSold = 0;
+  int _partsBought = 0;
+  int _co2Reduced = 0;
+  int _savedFromLandfill = 0;
 
   @override
   void initState() {
     super.initState();
     _loadProfile();
+    _loadEcoStats(); // Call it here!
   }
 
   Future<void> _loadProfile() async {
@@ -34,6 +41,19 @@ class _AccountScreenState extends State<AccountScreen> {
       setState(() {
         _username = result['data']['name'] ?? 'User';
         _email = result['data']['email'] ?? '';
+      });
+    }
+  }
+
+  // Added _loadEcoStats method
+  Future<void> _loadEcoStats() async {
+    final result = await ApiService.getEcoStats();
+    if (result['success']) {
+      setState(() {
+        _partsSold = result['data']['parts_sold'] ?? 0;
+        _partsBought = result['data']['parts_bought'] ?? 0;
+        _co2Reduced = result['data']['co2_reduced_percent'] ?? 0;
+        _savedFromLandfill = result['data']['parts_saved_from_landfill'] ?? 0;
       });
     }
   }
@@ -151,7 +171,7 @@ class _AccountScreenState extends State<AccountScreen> {
                           const Icon(Icons.eco_outlined,
                               color: AppTheme.success, size: 18),
                           const SizedBox(width: 6),
-                          Text("You've saved 120 parts from landfill",
+                          Text("You've saved $_savedFromLandfill parts from landfill", // Wired up!
                               style: GoogleFonts.poppins(
                                   fontSize: 12,
                                   color: AppTheme.textPrimary,
@@ -162,11 +182,11 @@ class _AccountScreenState extends State<AccountScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          _EcoStat(label: 'Parts Sold', value: '113'),
-                          _EcoStat(label: 'Parts bought', value: '7'),
+                          _EcoStat(label: 'Parts Sold', value: '$_partsSold'), // Wired up!
+                          _EcoStat(label: 'Parts bought', value: '$_partsBought'), // Wired up!
                           _EcoStat(
                               label: 'CO2 Reduced',
-                              value: '7%',
+                              value: '$_co2Reduced%', // Wired up!
                               valueColor: AppTheme.success),
                         ],
                       ),

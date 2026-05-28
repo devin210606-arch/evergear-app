@@ -17,6 +17,9 @@ def get_wallet_balance(current_user: User = Depends(get_current_user)):
 def topup_wallet(data: TopUpRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     if data.amount <= 0:
         raise HTTPException(status_code=400, detail="Amount must be greater than zero")
+    
+    tax_amount = int(data.amount * 0.01)
+    total_to_charge_bank = data.amount + tax_amount
 
     current_user.wallet_balance += data.amount
 
@@ -24,7 +27,7 @@ def topup_wallet(data: TopUpRequest, db: Session = Depends(get_db), current_user
         user_id=current_user.id,
         type="topup",
         amount=data.amount,
-        description="Top Up",
+        description=f"Top Up (Billed Rp. {total_to_charge_bank:,} inc. tax)",
         status="success"
     )
     db.add(new_tx)

@@ -96,6 +96,12 @@ def get_my_listings(
     ]
 
 # GET single listing
+@router.get("") # (Or whatever your route path is currently set to)
+def get_all_available_listings(db: Session = Depends(get_db)):
+    # This filter is the magic trick!
+    available_listings = db.query(Listing).filter(Listing.status == "available").all()
+    return available_listings
+
 @router.get("/{listing_id}")
 def get_listing(listing_id: int, db: Session = Depends(get_db)):
     listing = db.query(Listing).filter(Listing.id == listing_id).first()
@@ -139,6 +145,27 @@ def create_listing(
         "id": new_listing.id,
         "title": new_listing.title,
     }
+
+@router.post("/{listing_id}/buy")
+def buy_listing(
+    listing_id: int, 
+    db: Session = Depends(get_db), 
+    current_user: User = Depends(get_current_user)
+):
+    # Find the listing
+    listing = db.query(Listing).filter(Listing.id == listing_id).first()
+    
+    # Safety checks
+    if not listing:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    if listing.status == "sold":
+        raise HTTPException(status_code=400, detail="Sorry, this item is already sold!")
+
+    # Mark as sold
+    listing.status = "sold"
+    db.commit()
+    
+    return {"message": "Item purchased successfully!", "status": listing.status}
 
 # PUT update listing
 @router.put("/{listing_id}")

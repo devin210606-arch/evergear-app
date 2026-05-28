@@ -16,6 +16,7 @@ import os
 import random
 from datetime import datetime, timedelta
 from schemas.engagement_schema import EcoStatsResponse
+from models.order_model import Order
 
 router = APIRouter()
 
@@ -115,6 +116,17 @@ def update_profile(
     current_user.email = user_update.email
     if user_update.phone:
         current_user.phone = user_update.phone
+
+    db.query(Listing).filter(Listing.seller_id == current_user.id).update(
+            {"seller_name": user_update.name}
+    )
+    db.query(Order).filter(Order.seller_id == current_user.id).update(
+        {"seller_name": user_update.name}
+    )
+    db.query(Order).filter(Order.buyer_id == current_user.id).update(
+        {"buyer_name": user_update.name}
+    )
+
     db.commit()
     db.refresh(current_user)
     return {
