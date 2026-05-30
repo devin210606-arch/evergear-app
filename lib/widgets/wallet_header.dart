@@ -23,7 +23,7 @@ class _WalletHeaderState extends State<WalletHeader> {
   @override
   void initState() {
     super.initState();
-    _loadBalance();
+    ApiService.getWalletBalance();
   }
 
   Future<void> _loadBalance() async {
@@ -80,11 +80,19 @@ class _WalletHeaderState extends State<WalletHeader> {
                       Text('Wallet Balance',
                           style: GoogleFonts.poppins(
                               fontSize: 9, color: AppTheme.textSecondary)),
-                      Text(ApiService.formatPrice(_balance),
-                          style: GoogleFonts.poppins(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.textPrimary)),
+                              
+                      ValueListenableBuilder<int>(
+                        valueListenable: ApiService.currentWalletBalance,
+                        builder: (context, balance, child) {
+                          return Text(
+                            ApiService.formatPrice(balance),
+                            style: GoogleFonts.poppins(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.textPrimary),
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ],

@@ -224,7 +224,12 @@ class _WalletScreenState extends State<WalletScreen> {
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (_) => StatefulBuilder(
-        builder: (context, setSheetState) => Padding(
+        builder: (context, setSheetState) {
+          final parsedAmount = int.tryParse(amountCtrl.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+          final taxAmount = (parsedAmount * 0.01).round();
+          final totalAmount = parsedAmount + taxAmount;
+          
+          return Padding(
           padding: EdgeInsets.fromLTRB(
               16, 20, 16, MediaQuery.of(context).viewInsets.bottom + 24),
           child: Column(
@@ -242,6 +247,9 @@ class _WalletScreenState extends State<WalletScreen> {
               TextField(
                 controller: amountCtrl,
                 keyboardType: TextInputType.number,
+                onChanged: (value) {
+                    setSheetState(() {}); 
+                  },
                 decoration: const InputDecoration(
                     hintText: 'Enter amount', prefixText: 'Rp. '),
               ),
@@ -250,7 +258,10 @@ class _WalletScreenState extends State<WalletScreen> {
                 spacing: 8,
                 children: ['50000', '100000', '200000', '500000']
                     .map((a) => GestureDetector(
-                          onTap: () => amountCtrl.text = a,
+                          onTap: () {
+                            amountCtrl.text = a;
+                            setSheetState(() {});
+                          },
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 14, vertical: 8),
@@ -266,6 +277,46 @@ class _WalletScreenState extends State<WalletScreen> {
                     .toList(),
               ),
               const SizedBox(height: 20),
+              if (parsedAmount > 0) ...[
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF3F4F6),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Top Up Amount', style: GoogleFonts.poppins(fontSize: 12, color: AppTheme.textSecondary)),
+                            Text('Rp. ${ApiService.formatPrice(parsedAmount).replaceAll('Rp. ', '')}', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w500)),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Tax (1%)', style: GoogleFonts.poppins(fontSize: 12, color: AppTheme.textSecondary)),
+                            Text('Rp. ${ApiService.formatPrice(taxAmount).replaceAll('Rp. ', '')}', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w500)),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        const Divider(),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Total Payment', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold)),
+                            Text('Rp. ${ApiService.formatPrice(totalAmount).replaceAll('Rp. ', '')}', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.primary)),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+
               ElevatedButton(
                 onPressed: () async {
                   final amount = int.tryParse(amountCtrl.text.trim()) ?? 0;
@@ -281,7 +332,8 @@ class _WalletScreenState extends State<WalletScreen> {
               ),
             ],
           ),
-        ),
+        );
+      },
       ),
     );
   }

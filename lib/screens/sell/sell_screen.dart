@@ -20,6 +20,7 @@ class _SellScreenState extends State<SellScreen> {
   String _username = 'User';
   List<Map<String, dynamic>> _myListings = [];
   bool _isLoading = false;
+  Key _walletKey = UniqueKey();
 
   @override
   void initState() {
@@ -36,7 +37,10 @@ class _SellScreenState extends State<SellScreen> {
   }
 
   Future<void> _loadData() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _walletKey = UniqueKey(); 
+    });
     final profileResult = await ApiService.getProfile();
     if (profileResult['success']) {
       setState(() => _username = profileResult['data']['name'] ?? 'User');
@@ -239,6 +243,7 @@ class _SellScreenState extends State<SellScreen> {
 
   Widget _buildHeader(BuildContext context) {
     return WalletHeader(
+      key: _walletKey,
       username: _username,
       onAvatarTap: () => MainShell.of(context)?.switchTab(3),
     );

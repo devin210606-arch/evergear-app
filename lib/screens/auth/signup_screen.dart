@@ -220,7 +220,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ],
                         ),
                         const SizedBox(height: 16),
-
+/*
                         // Social buttons
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -245,6 +245,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ],
                         ),
                         const SizedBox(height: 20),
+*/
 
                         // Already have account
                         Center(

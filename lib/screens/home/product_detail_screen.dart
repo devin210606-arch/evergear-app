@@ -1,3 +1,4 @@
+import 'package:evergear/screens/buy/buy_animation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../theme/app_theme.dart';
@@ -5,6 +6,7 @@ import '../chat/chat_screen.dart';
 import 'payment_screen.dart';
 import '../sell/edit_listing_screen.dart';
 import '../../models/favorites_model.dart';
+import '../../services/api_service.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final bool isMine;
@@ -206,10 +208,35 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             ),
                           ),
                           OutlinedButton(
-                            onPressed: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (_) => const ChatScreen())),
+                            onPressed: () async {
+                              showDialog(
+                                context: context,
+                                barrierDismissible: false,
+                                builder: (_) => const Center(child: CircularProgressIndicator()),
+                              );
+                              final result = await ApiService.startConversation(widget.listingId);
+                              if (context.mounted) Navigator.pop(context);
+                              if (result['success'] && context.mounted) {
+                                final convoId = result['data']['conversation_id'] ?? result['data']['id']; 
+                                
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => ChatScreen(
+                                      conversationId: convoId,
+                                      otherUserName: widget.sellerName, 
+                                      productName: widget.productName,
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(result['message'] ?? 'Failed to open chat')),
+                                  );
+                                }
+                              }
+                            },
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 12, vertical: 6),
@@ -301,22 +328,33 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 ],
               )
             : ElevatedButton(
-                onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => PaymentScreen(
-                              listingId: widget.listingId,
-                              productName: widget.productName,
-                              price: widget.price,
-                              priceAmount: widget.priceAmount,
-                            ))),
+                onPressed: () async {
+                  final bool? purchaseSuccessful = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => PaymentScreen(
+                                listingId: widget.listingId,
+                                productName: widget.productName,
+                                price: widget.price,
+                                priceAmount: widget.priceAmount,
+                              )));
+                              if (purchaseSuccessful == true && context.mounted) {
+                                await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const BuyAnimationScreen(co2Reduced: 2), 
+                                  ),
+                                );
+                                if (context.mounted) Navigator.pop(context);
+                              }
+                },
                 child: Text('Buy Now',
                     style: GoogleFonts.poppins(
                         fontWeight: FontWeight.w700,
                         letterSpacing: 1.2)),
-              ),
+            ),
       ),
-    );
+      );
   }
 
   void _showDeleteConfirm(BuildContext context) {

@@ -24,6 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _co2Reduced = 0;
   int _savedFromLandfill = 0;
   String _username = 'User';
+  Key _walletKey = UniqueKey();
 
   @override
   void initState() {
@@ -127,6 +128,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildHeader(BuildContext context) {
     return WalletHeader(
+      key: _walletKey,
       username: _username,
       onAvatarTap: () => MainShell.of(context)?.switchTab(3),
     );
@@ -250,7 +252,9 @@ class _HomeScreenState extends State<HomeScreen> {
         price: ApiService.formatPrice(p['price']),
         rating: 4.0,
         icon: _categoryIcon(p['category'] ?? ''),
-        onTap: () => Navigator.push(
+
+        onTap: () {
+        Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => ProductDetailScreen(
@@ -264,11 +268,18 @@ class _HomeScreenState extends State<HomeScreen> {
               description: p['description'],
             ),
           ),
-        ),
+        ).then((_){
+        _loadPopularProducts();
+            _loadEcoStats(); 
+            setState(() {
+              _walletKey = UniqueKey();
+            });
+          });
+        },
       )).toList(),
     );
   }
-} // <-- This is where the class SHOULD end!
+}
 
 class _ActionBanner extends StatelessWidget {
   final String title;

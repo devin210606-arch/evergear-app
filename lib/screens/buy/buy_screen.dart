@@ -17,6 +17,7 @@ class BuyScreen extends StatefulWidget {
 }
 
 class _BuyScreenState extends State<BuyScreen> {
+  Key _walletKey = UniqueKey();
   final _searchCtrl = TextEditingController();
   String _username = 'User';
   int _selectedCategory = -1;
@@ -157,19 +158,28 @@ class _BuyScreenState extends State<BuyScreen> {
                                             price: ApiService.formatPrice(p['price']),
                                             rating: 4.0,
                                             icon: _categoryIcon(p['category'] ?? ''),
-                                            onTap: () => Navigator.push(
+                                            onTap: () {
+                                              Navigator.push(
                                                 context,
                                                 MaterialPageRoute(
-                                                    builder: (_) => ProductDetailScreen(
-                                                          listingId: p['id'],
-                                                          productName: p['title'],
-                                                          price: ApiService.formatPrice(p['price']),
-                                                          priceAmount: p['price'],
-                                                          sellerName: p['seller_name'],
-                                                          category: p['category'],
-                                                          condition: p['condition'],
-                                                          description: p['description'],
-                                                        ))),
+                                                  builder: (_) => ProductDetailScreen(
+                                                    listingId: p['id'],
+                                                    productName: p['title'],
+                                                    price: ApiService.formatPrice(p['price']),
+                                                    priceAmount: p['price'],
+                                                    sellerName: p['seller_name'],
+                                                    category: p['category'],
+                                                    condition: p['condition'],
+                                                    description: p['description'],
+                                                  ),
+                                                ),
+                                              ).then((_) {
+                                                _loadListings();
+                                                setState(() {
+                                                _walletKey = UniqueKey();
+                                              });
+                                              });
+                                            },
                                           ))
                                       .toList(),
                                 ),
@@ -186,6 +196,7 @@ class _BuyScreenState extends State<BuyScreen> {
 
   Widget _buildHeader(BuildContext context) {
     return WalletHeader(
+      key: _walletKey,
       username: _username,
       onAvatarTap: () => MainShell.of(context)?.switchTab(3),
     );

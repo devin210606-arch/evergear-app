@@ -65,7 +65,11 @@ class HelpCenterScreen extends StatelessWidget {
                   ),
                   ElevatedButton(
                     onPressed: () => Navigator.push(context,
-                        MaterialPageRoute(builder: (_) => const ChatScreen())),
+                    MaterialPageRoute(builder: (_) => const ChatScreen(
+                      conversationId: 0, // Gunakan ID 0 agar _loadMessages tidak error
+                      otherUserName: 'EverGear Support', 
+                      productName: 'Customer Service',
+                    ))),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
                       foregroundColor: AppTheme.primary,

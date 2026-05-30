@@ -1,0 +1,110 @@
+Flutter crash report.
+Please report a bug at https://github.com/flutter/flutter/issues.
+
+## command
+
+flutter run
+
+## exception
+
+TimeoutException: TimeoutException after 0:05:00.000000: Could not acquire the lock to /Users/jovanna/Desktop/evergear-app/.dart_tool/hooks_runner/shared/objective_c/.lock.
+
+```
+#0      _runUnderFileLock (package:hooks_runner/src/locking/locking.dart:127:3)
+<asynchronous suspension>
+#1      runUnderDirectoriesLock (package:hooks_runner/src/locking/locking.dart:21:10)
+<asynchronous suspension>
+#2      NativeAssetsBuildRunner._runHookForPackageCached.<anonymous closure> (package:hooks_runner/src/build_runner/build_runner.dart:441:17)
+<asynchronous suspension>
+#3      NativeAssetsBuildRunner._timeAsync (package:hooks_runner/src/build_runner/build_runner.dart:1173:14)
+<asynchronous suspension>
+#4      NativeAssetsBuildRunner.build.<anonymous closure> (package:hooks_runner/src/build_runner/build_runner.dart:197:22)
+<asynchronous suspension>
+#5      NativeAssetsBuildRunner._timeAsync (package:hooks_runner/src/build_runner/build_runner.dart:1173:14)
+<asynchronous suspension>
+#6      FlutterNativeAssetsBuildRunnerImpl.build (package:flutter_tools/src/isolated/native_assets/native_assets.dart:251:60)
+<asynchronous suspension>
+#7      _build (package:flutter_tools/src/isolated/native_assets/native_assets.dart:624:36)
+<asynchronous suspension>
+#8      _runDartHooks (package:flutter_tools/src/isolated/native_assets/native_assets.dart:558:37)
+<asynchronous suspension>
+#9      FlutterHookRunnerNative.runHooks (package:flutter_tools/src/build_system/targets/hook_runner_native.dart:40:45)
+<asynchronous suspension>
+#10     HotRunner._updateDevFS (package:flutter_tools/src/run_hot.dart:502:30)
+<asynchronous suspension>
+#11     HotRunner._attach (package:flutter_tools/src/run_hot.dart:309:40)
+<asynchronous suspension>
+#12     RunCommand.runCommand (package:flutter_tools/src/commands/run.dart:934:26)
+<asynchronous suspension>
+#13     FlutterCommand.run.<anonymous closure> (package:flutter_tools/src/runner/flutter_command.dart:1630:27)
+<asynchronous suspension>
+#14     AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:154:19)
+<asynchronous suspension>
+#15     CommandRunner.runCommand (package:args/command_runner.dart:212:13)
+<asynchronous suspension>
+#16     FlutterCommandRunner.runCommand.<anonymous closure> (package:flutter_tools/src/runner/flutter_command_runner.dart:496:9)
+<asynchronous suspension>
+#17     AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:154:19)
+<asynchronous suspension>
+#18     FlutterCommandRunner.runCommand (package:flutter_tools/src/runner/flutter_command_runner.dart:431:5)
+<asynchronous suspension>
+#19     FlutterCommandRunner.run.<anonymous closure> (package:flutter_tools/src/runner/flutter_command_runner.dart:307:33)
+<asynchronous suspension>
+#20     run.<anonymous closure>.<anonymous closure> (package:flutter_tools/runner.dart:104:11)
+<asynchronous suspension>
+#21     AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:154:19)
+<asynchronous suspension>
+#22     main (package:flutter_tools/executable.dart:103:3)
+<asynchronous suspension>
+```
+
+## flutter doctor
+
+```
+[32m[✓][39m Flutter (Channel stable, 3.44.0, on macOS 15.7.2 24G325 darwin-arm64 (Rosetta), locale en-ID) [5.3s]
+    [32m•[39m Flutter version 3.44.0 on channel stable at /Users/jovanna/flutter
+    [32m•[39m Upstream repository https://github.com/flutter/flutter.git
+    [32m•[39m Framework revision 559ffa3f75 (13 days ago), 2026-05-15 14:13:13 -0700
+    [32m•[39m Engine revision 4c525dac5e
+    [32m•[39m Dart version 3.12.0
+    [32m•[39m DevTools version 2.57.0
+    [32m•[39m Feature flags: enable-web, enable-linux-desktop, enable-macos-desktop, enable-windows-desktop, enable-android, enable-ios, cli-animations, enable-native-assets,
+      enable-swift-package-manager, omit-legacy-version-file, enable-lldb-debugging, enable-uiscene-migration
+
+[33m[!][39m Android toolchain - develop for Android devices (Android SDK version 36.1.0) [1,315ms]
+    [32m•[39m Android SDK at /Users/jovanna/Library/Android/sdk
+    [32m•[39m Emulator version 36.5.11.0 (build_id 15261927) (CL:N/A)
+    [31m✗[39m cmdline-tools component is missing.
+      Try installing or updating Android Studio.
+      Alternatively, download the tools from https://developer.android.com/studio#command-line-tools-only and make sure to set the ANDROID_HOME environment variable.
+      See https://developer.android.com/studio/command-line for more details.
+    [31m✗[39m Android license status unknown.
+      Run `flutter doctor --android-licenses` to accept the SDK licenses.
+      See https://flutter.dev/to/macos-android-setup for more details.
+
+[33m[!][39m Xcode - develop for iOS and macOS [540ms]
+    [31m✗[39m Xcode installation is incomplete; a full installation is necessary for iOS and macOS development.
+      Download at: https://developer.apple.com/xcode/
+      Or install Xcode via the App Store.
+      Once installed, run:
+        sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
+        sudo xcodebuild -runFirstLaunch
+    [33m![39m CocoaPods not installed.
+        CocoaPods is a package manager for iOS or macOS platform code.
+        Without CocoaPods, plugins will not work on iOS or macOS.
+        For more info, see https://flutter.dev/to/platform-plugins
+      For installation instructions, see https://guides.cocoapods.org/using/getting-started.html#installation
+
+[32m[✓][39m Chrome - develop for the web [121ms]
+    [32m•[39m Chrome at /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+
+[32m[✓][39m Connected device (3 available) [12.5s]
+    [32m•[39m sdk gphone64 arm64 (mobile) • emulator-5554 • android-arm64  • Android 14 (API 34) (emulator)
+    [32m•[39m macOS (desktop)             • macos         • darwin-arm64   • macOS 15.7.2 24G325 darwin-arm64 (Rosetta)
+    [32m•[39m Chrome (web)                • chrome        • web-javascript • unknown
+
+[32m[✓][39m Network resources [456ms]
+    [32m•[39m All expected network resources are available.
+
+[33m![39m Doctor found issues in 2 categories.
+```

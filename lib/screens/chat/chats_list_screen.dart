@@ -89,8 +89,8 @@ class _ChatsListScreenState extends State<ChatsListScreen> {
                             MaterialPageRoute(
                               builder: (_) => ChatScreen(
                                 conversationId: chat['id'],
-                                otherUserName: chat['otherUser'],
-                                productName: chat['product'],
+                                otherUserName: chat['otherUser'] ?? 'User', 
+                                productName: chat['product'] ?? 'Item',
                               ),
                             ),
                           ).then((_) => _loadChats()),
