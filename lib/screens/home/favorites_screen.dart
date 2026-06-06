@@ -56,7 +56,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   .map((item) => ProductCard(
                         name: item['name'],
                         price: item['price'],
-                        rating: item['rating'],
+                        ecoValue: '2% CO2',
                         icon: item['icon'],
                         onTap: () => Navigator.push(
                           context,

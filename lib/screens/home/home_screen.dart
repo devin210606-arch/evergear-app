@@ -21,7 +21,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isLoadingProducts = false;
   int _partsSold = 0;
   int _partsBought = 0;
-  int _co2Reduced = 0;
+  double _co2Reduced = 0.0;
   int _savedFromLandfill = 0;
   String _username = 'User';
   Key _walletKey = UniqueKey();
@@ -40,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _partsSold = result['data']['parts_sold'] ?? 0;
         _partsBought = result['data']['parts_bought'] ?? 0;
-        _co2Reduced = result['data']['co2_reduced_percent'] ?? 0;
+        _co2Reduced = (result['data']['co2_reduced_percent'] ?? 0).toDouble();
         _savedFromLandfill = result['data']['parts_saved_from_landfill'] ?? 0;
       });
     }
@@ -186,7 +186,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
              _EcoStat(label: 'Parts Sold', value: '$_partsSold'),
              _EcoStat(label: 'Parts bought', value: '$_partsBought'),
-             _EcoStat(label: 'CO2 Reduced', value: '$_co2Reduced%', valueColor: AppTheme.success),
+             _EcoStat(label: 'CO2 Reduced', value: '${_co2Reduced.toStringAsFixed(1)}%', valueColor: AppTheme.success),
             ],
           ),
         ],
@@ -250,7 +250,7 @@ class _HomeScreenState extends State<HomeScreen> {
       children: _popularProducts.take(6).map((p) => ProductCard(
         name: p['title'] ?? '',
         price: ApiService.formatPrice(p['price']),
-        rating: 4.0,
+        ecoValue: '${(((p['price'] ?? 0) / 100000) * 0.2).clamp(0.1, 25.0).toStringAsFixed(1)}% CO2',
         icon: _categoryIcon(p['category'] ?? ''),
 
         onTap: () {

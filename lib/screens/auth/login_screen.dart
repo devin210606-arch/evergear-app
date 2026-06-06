@@ -208,6 +208,7 @@ void _showError(String message) {
                           ),
                           const SizedBox(height: 16),
 
+/*
                           // Social login buttons
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -232,6 +233,7 @@ void _showError(String message) {
                             ],
                           ),
                           const SizedBox(height: 20),
+*/
 
                           // Sign up
                           GestureDetector(

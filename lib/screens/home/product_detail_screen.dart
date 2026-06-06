@@ -128,13 +128,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   ),
                   const SizedBox(height: 8),
 
-                  // Rating + condition
+                  // CO2 Contribution + condition
                   Row(
                     children: [
-                      const Icon(Icons.star, size: 16, color: Colors.amber),
-                      Text(' 4.0  •  ',
-                          style: GoogleFonts.poppins(
-                              fontSize: 13, color: AppTheme.textSecondary)),
+                      const Icon(Icons.eco, size: 16, color: AppTheme.success), // 🟢 Ikon daun hijau
+                      Text(
+                            ' Save ${(((widget.priceAmount) / 100000) * 0.2).clamp(0.1, 25.0).toStringAsFixed(1)}% CO2  •  ',
+                            style: GoogleFonts.poppins(
+                                fontSize: 13, color: AppTheme.textSecondary),
+                          ),
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 2),
@@ -200,10 +202,17 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                     style: GoogleFonts.poppins(
                                         fontWeight: FontWeight.w600,
                                         fontSize: 13)),
-                                Text('Jakarta, Indonesia',
-                                    style: GoogleFonts.poppins(
-                                        fontSize: 11,
-                                        color: AppTheme.textSecondary)),
+                                // 🟢 Rating penjual sekarang ada di sini!
+                                Row(
+                                  children: [
+                                    const Icon(Icons.star, size: 14, color: Colors.amber),
+                                    const SizedBox(width: 4),
+                                    Text('4.9  •  Jakarta, Indonesia',
+                                        style: GoogleFonts.poppins(
+                                            fontSize: 11,
+                                            color: AppTheme.textSecondary)),
+                                  ],
+                                ),
                               ],
                             ),
                           ),
@@ -342,7 +351,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                 await Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => const BuyAnimationScreen(co2Reduced: 2), 
+                                    builder: (_) => BuyAnimationScreen(
+                                    co2Reduced: (((widget.priceAmount) / 100000) * 0.2).clamp(0.1, 25.0),
+                                  ),
                                   ),
                                 );
                                 if (context.mounted) Navigator.pop(context);

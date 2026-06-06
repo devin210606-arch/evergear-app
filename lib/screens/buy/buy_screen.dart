@@ -156,7 +156,7 @@ class _BuyScreenState extends State<BuyScreen> {
                                       .map((p) => ProductCard(
                                             name: p['title'] ?? '',
                                             price: ApiService.formatPrice(p['price']),
-                                            rating: 4.0,
+                                            ecoValue: '${(((p['price'] ?? 0) / 100000) * 0.2).clamp(0.1, 25.0).toStringAsFixed(1)}% CO2',
                                             icon: _categoryIcon(p['category'] ?? ''),
                                             onTap: () {
                                               Navigator.push(

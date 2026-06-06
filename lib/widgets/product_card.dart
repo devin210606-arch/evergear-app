@@ -5,7 +5,7 @@ import '../theme/app_theme.dart';
 class ProductCard extends StatelessWidget {
   final String name;
   final String price;
-  final double rating;
+  final String ecoValue;
   final IconData icon;
   final VoidCallback? onTap;
 
@@ -13,7 +13,7 @@ class ProductCard extends StatelessWidget {
     super.key,
     required this.name,
     required this.price,
-    required this.rating,
+    required this.ecoValue,
     required this.icon,
     this.onTap,
   });
@@ -80,17 +80,18 @@ class ProductCard extends StatelessWidget {
                       ),
                       Row(
                         children: [
-                          const Icon(Icons.star,
-                              size: 12, color: Colors.amber),
+                          const Icon(Icons.eco, size: 14, color: AppTheme.success), // Ikon Daun Hijau
+                          const SizedBox(width: 4),
                           Text(
-                            ' $rating',
+                            ecoValue, // Atau gunakan variabel dari parameter card-nya
                             style: GoogleFonts.poppins(
-                              fontSize: 10,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
                               color: AppTheme.textSecondary,
                             ),
                           ),
                         ],
-                      ),
+                      )
                     ],
                   ),
                 ],

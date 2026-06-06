@@ -3,11 +3,12 @@ import 'package:lottie/lottie.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class BuyAnimationScreen extends StatefulWidget {
-  final int co2Reduced;
+  // 🟢 1. UBAH TIPE DATA JADI double
+  final double co2Reduced; 
 
   const BuyAnimationScreen({
     super.key, 
-    this.co2Reduced = 2,
+    this.co2Reduced = 2.0, // Default value disesuaikan jadi desimal
   });
 
   @override
@@ -63,8 +64,9 @@ class _BuyAnimationScreenState extends State<BuyAnimationScreen> with SingleTick
                 ),
               ),
               const SizedBox(height: 12),
+              // 🟢 2. FORMAT ANGKA DESIMALNYA DI SINI
               Text(
-                'You helped reduce ${widget.co2Reduced}% CO2!',
+                'You helped reduce ${widget.co2Reduced.toStringAsFixed(1)}% CO2!',
                 style: GoogleFonts.poppins(
                   fontSize: 16, 
                   color: const Color(0xFF10B981), 

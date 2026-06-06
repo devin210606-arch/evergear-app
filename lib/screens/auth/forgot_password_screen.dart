@@ -8,6 +8,19 @@ class ForgotPasswordScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // 🟢 1. TAMBAHKAN INI: Agar background gradient tembus sampai ke atas
+      extendBodyBehindAppBar: true, 
+      
+      // 🟢 2. TAMBAHKAN APPBAR TRANSPARAN INI UNTUK TOMBOL BACK
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0, // Hilangkan bayangan agar benar-benar menyatu
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context), // Perintah untuk kembali
+        ),
+      ),
+      
       backgroundColor: const Color(0xFF0D1B4B),
       body: Stack(
         fit: StackFit.expand,
@@ -26,7 +39,7 @@ class ForgotPasswordScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
                 children: [
-                  const SizedBox(height: 60),
+                  const SizedBox(height: 40), // Jarak disesuaikan sedikit karena ada AppBar
                   Container(
                     width: 72,
                     height: 72,
