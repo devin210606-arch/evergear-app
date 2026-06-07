@@ -10,32 +10,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1b0fc381-02d9-41ca-9d8c-fc46ba92388c" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/deviceManager.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/deviceManager.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Dart_SDK.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Dart_SDK.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.metadata" beforeDir="false" afterPath="$PROJECT_DIR$/.metadata" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/evergear.iml" beforeDir="false" afterPath="$PROJECT_DIR$/evergear.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/evergear_backend/controllers/listing_controller.py" beforeDir="false" afterPath="$PROJECT_DIR$/evergear_backend/controllers/listing_controller.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/evergear_backend/controllers/order_controller.py" beforeDir="false" afterPath="$PROJECT_DIR$/evergear_backend/controllers/order_controller.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/evergear_backend/controllers/user_controller.py" beforeDir="false" afterPath="$PROJECT_DIR$/evergear_backend/controllers/user_controller.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/evergear_backend/evergear.db" beforeDir="false" afterPath="$PROJECT_DIR$/evergear_backend/evergear.db" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/evergear_backend/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/evergear_backend/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/evergear_backend/models/user_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/evergear_backend/models/user_model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/evergear_backend/schemas/engagement_schema.py" beforeDir="false" afterPath="$PROJECT_DIR$/evergear_backend/schemas/engagement_schema.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/screens/account/account_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/screens/account/account_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/screens/buy/buy_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/screens/buy/buy_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/screens/chat/chat_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/screens/chat/chat_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/screens/home/favorites_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/screens/home/favorites_screen.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/screens/home/home_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/screens/home/home_screen.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/screens/home/main_shell.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/screens/home/main_shell.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/screens/home/my_orders_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/screens/home/my_orders_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/screens/home/product_detail_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/screens/home/product_detail_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/screens/sell/edit_listing_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/screens/sell/edit_listing_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/screens/sell/list_part_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/screens/sell/list_part_screen.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/screens/sell/sell_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/screens/sell/sell_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/services/api_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/services/api_service.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/widgets/product_card.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/widgets/product_card.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

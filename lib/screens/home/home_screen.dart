@@ -278,6 +278,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 price: ApiService.formatPrice(p['price']),
                 priceAmount: p['price'],
                 sellerName: p['seller_name'] ?? '',
+                sellerRating: (p['seller_rating'] ?? 0.0).toDouble(),
                 category: p['category'] ?? '',
                 condition: p['condition'] ?? '',
                 description: p['description'],

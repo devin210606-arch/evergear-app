@@ -154,7 +154,7 @@ def create_listing(
         with open(file_location, "wb+") as file_object:
             shutil.copyfileobj(image.file, file_object)
         
-        photo_url = f"http://127.0.0.1:8000/{file_location}"
+        photo_url = f"http://10.0.2.2:8000/{file_location}"
 
     new_listing = Listing(
         title=title,

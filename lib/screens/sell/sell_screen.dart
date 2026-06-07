@@ -47,8 +47,13 @@ class _SellScreenState extends State<SellScreen> {
     }
     final listingsResult = await ApiService.getMyListings();
     if (listingsResult['success']) {
+      List<Map<String, dynamic>> fetchedListings = List<Map<String, dynamic>>.from(listingsResult['data']);
+      
+      // 🟢 SORTING MAGIC: Newest items at the top!
+      fetchedListings.sort((a, b) => (b['id'] as int).compareTo(a['id'] as int));
+      
       setState(() {
-        _myListings = List<Map<String, dynamic>>.from(listingsResult['data']);
+        _myListings = fetchedListings;
       });
     }
     setState(() => _isLoading = false);
@@ -238,6 +243,9 @@ class _SellScreenState extends State<SellScreen> {
                                         ),
                                       ),
                                     );
+                                    if (result != null) {
+                                      _loadData();
+                                    }
 
                                     if (result == true) {
                                       _loadData();

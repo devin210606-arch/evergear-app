@@ -19,13 +19,23 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
   int _buyCategory = -1;
+  
+  // 🟢 The Walkie-Talkie Keys!
+  // Every time we change these keys, the specific screen is forced to completely refresh.
+  Key _homeKey = UniqueKey();
+  Key _buyKey = UniqueKey();
+  Key _sellKey = UniqueKey();
 
   void switchTab(int index, {int? category}) {
     setState(() {
       _currentIndex = index;
       if (category != null) _buyCategory = category;
-      // reset buy category when tapping Buy tab directly with no category
       if (category == null && index == 1) _buyCategory = -1;
+      
+      // 🟢 Force the tapped screen to refresh instantly
+      if (index == 0) _homeKey = UniqueKey();
+      if (index == 1) _buyKey = UniqueKey();
+      if (index == 2) _sellKey = UniqueKey();
     });
   }
 
@@ -35,9 +45,9 @@ class _MainShellState extends State<MainShell> {
       body: IndexedStack(
         index: _currentIndex,
         children: [
-          const HomeScreen(),
-          BuyScreen(initialCategory: _buyCategory),
-          const SellScreen(),
+          HomeScreen(key: _homeKey), // 🟢 Pass the key here
+          BuyScreen(key: _buyKey, initialCategory: _buyCategory), // 🟢 And here
+          SellScreen(key: _sellKey), // 🟢 And here
           const AccountScreen(),
         ],
       ),
