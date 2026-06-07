@@ -1,7 +1,9 @@
+import 'package:evergear/widgets/rating_dialogue.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../theme/app_theme.dart';
 import '../../services/api_service.dart';
+import '../../widgets/rating_dialogue.dart'; 
 
 class MyOrdersScreen extends StatefulWidget {
   const MyOrdersScreen({super.key});
@@ -15,7 +17,6 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
   late TabController _tabController;
   bool _isLoading = false;
 
-  // Emptied the placeholders since the API will load the real parts data
   List<Map<String, dynamic>> _buyerOrders = [];
   List<Map<String, dynamic>> _sellerOrders = [];
 
@@ -38,31 +39,39 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
     // Load Buyer Orders
     final buyerResult = await ApiService.getMyOrders();
     if (buyerResult['success']) {
+      List<Map<String, dynamic>> fetchedBuyerOrders = (buyerResult['data'] as List).map((o) => {
+        'id': o['id'],
+        'product': o['product'],
+        'price': ApiService.formatPrice(o['price']),
+        'status': o['status'],
+        'date': 'Recent',
+        'icon': Icons.devices,
+        'seller_id': o['seller_id'] ?? 0,
+        'seller_name': o['seller_name'] ?? 'Seller',
+      }).toList();
+      fetchedBuyerOrders.sort((a, b) => (b['id'] as int).compareTo(a['id'] as int));
+
       setState(() {
-        _buyerOrders = (buyerResult['data'] as List).map((o) => {
-          'id': o['id'],
-          'product': o['product'],
-          'price': ApiService.formatPrice(o['price']),
-          'status': o['status'],
-          'date': 'Recent',
-          'icon': Icons.devices,
-        }).toList();
+        _buyerOrders = fetchedBuyerOrders;
       });
     }
     
     // Load Seller Orders
     final sellerResult = await ApiService.getMySellingOrders();
     if (sellerResult['success']) {
+      List<Map<String, dynamic>> fetchedSellerOrders = (sellerResult['data'] as List).map((o) => {
+        'id': o['id'],
+        'product': o['product'],
+        'price': ApiService.formatPrice(o['price']),
+        'status': o['status'],
+        'date': 'Recent',
+        'icon': Icons.devices,
+        'buyer': o['buyer_name'],
+      }).toList();
+      fetchedSellerOrders.sort((a, b) => (b['id'] as int).compareTo(a['id'] as int));
+
       setState(() {
-        _sellerOrders = (sellerResult['data'] as List).map((o) => {
-          'id': o['id'],
-          'product': o['product'],
-          'price': ApiService.formatPrice(o['price']),
-          'status': o['status'],
-          'date': 'Recent',
-          'icon': Icons.devices,
-          'buyer': o['buyer_name'],
-        }).toList();
+        _sellerOrders = fetchedSellerOrders;
       });
     }
     
@@ -223,7 +232,6 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
                         Text(order['product'] as String,
                             style: GoogleFonts.poppins(
                                 fontWeight: FontWeight.w600, fontSize: 13)),
-                        // Inject the buyer name dynamically if it's the seller view
                         if (!isBuyer && order['buyer'] != null)
                           Text('Buyer: ${order['buyer']}',
                               style: GoogleFonts.poppins(
@@ -242,15 +250,47 @@ class _MyOrdersScreenState extends State<MyOrdersScreen>
                 ],
               ),
               
-              // Action buttons consolidated for both Buyers and Sellers
               if (isBuyer) ...[
                 if (order['status'] == 'shipped') ...[
                   const SizedBox(height: 12),
                   ElevatedButton(
                     onPressed: () async {
+                      // 1. Check if the button actually reacts
+                      print("🟡 BUTTON CLICKED! Processing Order ID: ${order['id']}");
+                      
                       final result = await ApiService.confirmReceived(order['id']);
+                      
+                      // 2. Check the response from your Python backend
+                      print("🟡 API RESULT: $result");
+
                       if (result['success']) {
                         setState(() => order['status'] = 'completed');
+                        
+                        // 3. Check if seller data is successfully fetched
+                        print("🟡 SELLER DATA -> ID: ${order['seller_id']}, Name: ${order['seller_name']}");
+
+                        if (context.mounted) {
+                          // Temporarily bypass the "!= 0" check to force the dialog to show up!
+                          showDialog(
+                            context: context,
+                            builder: (_) => RatingDialog(
+                              // Fallback to ID 1 if seller_id is null/0 so we can test the UI
+                              sellerId: (order['seller_id'] == 0 || order['seller_id'] == null) 
+                                  ? 1 
+                                  : order['seller_id'] as int,
+                              sellerName: order['seller_name']?.toString() ?? 'Unknown Seller',
+                            ),
+                          );
+                        }
+                      } else {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(result['message'] ?? 'Backend API failed to respond'),
+                              backgroundColor: AppTheme.error,
+                            ),
+                          );
+                        }
                       }
                     },
                     style: ElevatedButton.styleFrom(

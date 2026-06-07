@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
+import 'dart:io';
 
 class ApiService {
   static const String baseUrl = 'http://10.0.2.2:8000';
@@ -177,24 +178,31 @@ class ApiService {
     required String category,
     required String condition,
     required String description,
+    File? imageFile,
   }) async {
     try {
       final token = await getToken();
-      final response = await http.post(
-        Uri.parse('$baseUrl/listings'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'title': title,
-          'price': price,
-          'category': category,
-          'condition': condition,
-          'description': description,
-        }),
-      );
-      final data = jsonDecode(response.body);
+      var uri = Uri.parse('$baseUrl/listings');
+
+      var request = http.MultipartRequest('POST', uri);
+      request.headers['Authorization'] = 'Bearer $token';
+
+      request.fields['title'] = title;
+      request.fields['price'] = price.toString();
+      request.fields['category'] = category;
+      request.fields['condition'] = condition;
+      request.fields['description'] = description;
+
+      if (imageFile != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath('image', imageFile.path)
+        );
+      }
+
+      var response = await request.send();
+      var responseData = await response.stream.bytesToString();
+      final data = jsonDecode(responseData);
+
       if (response.statusCode == 200) {
         return {'success': true, 'data': data};
       } else {
@@ -212,24 +220,31 @@ class ApiService {
     required String category,
     required String condition,
     required String description,
+    File? imageFile,
   }) async {
     try {
       final token = await getToken();
-      final response = await http.put(
-        Uri.parse('$baseUrl/listings/$listingId'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'title': title,
-          'price': price,
-          'category': category,
-          'condition': condition,
-          'description': description,
-        }),
-      );
-      final data = jsonDecode(response.body);
+      var uri = Uri.parse('$baseUrl/listings/$listingId');
+
+      var request = http.MultipartRequest('PUT', uri);
+      request.headers['Authorization'] = 'Bearer $token';
+
+      request.fields['title'] = title;
+      request.fields['price'] = price.toString();
+      request.fields['category'] = category;
+      request.fields['condition'] = condition;
+      request.fields['description'] = description;
+
+      if (imageFile != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath('image', imageFile.path)
+        );
+      }
+
+      var response = await request.send();
+      var responseData = await response.stream.bytesToString();
+      final data = jsonDecode(responseData);
+
       if (response.statusCode == 200) {
         return {'success': true, 'data': data};
       } else {
@@ -240,6 +255,7 @@ class ApiService {
     }
   }
 
+  // 🟢 Ini fungsi delete yang benar (tidak ganda lagi)
   static Future<Map<String, dynamic>> deleteListing(int listingId) async {
     try {
       final token = await getToken();
@@ -247,7 +263,7 @@ class ApiService {
         Uri.parse('$baseUrl/listings/$listingId'),
         headers: {'Authorization': 'Bearer $token'},
       );
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 204) {
         return {'success': true};
       } else {
         final data = jsonDecode(response.body);
@@ -629,4 +645,29 @@ class ApiService {
     }
   }
 
+  // ─── RATING SYSTEM ──────────────────────────────────────────────
+  static Future<Map<String, dynamic>> rateSeller({
+    required int sellerId,
+    required double rating,
+  }) async {
+    try {
+      final token = await getToken();
+      final response = await http.post(
+        Uri.parse('$baseUrl/users/$sellerId/rate'), // Rute API ke backend
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'rating': rating}),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': data};
+      } else {
+        return {'success': false, 'message': data['detail'] ?? 'Failed to submit rating'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Cannot connect to server'};
+    }
+  }
 }

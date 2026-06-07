@@ -75,7 +75,7 @@ class _SellScreenState extends State<SellScreen> {
   Color _statusColor(String status) {
     switch (status) {
       case 'sold': return AppTheme.success;
-      case 'in_progress': return AppTheme.warning; // Ensure 'warning' exists in AppTheme!
+      case 'in_progress': return AppTheme.warning; 
       default: return AppTheme.primary;
     }
   }
@@ -163,7 +163,27 @@ class _SellScreenState extends State<SellScreen> {
                                 ),
                               )).toList(),
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 20),
+
+                            // 🟢 BUTTON MOVED HERE (Right above the items!)
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => const ListPartScreen()),
+                                ).then((_) => _loadData()),
+                                style: ElevatedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                ),
+                                icon: const Icon(Icons.add),
+                                label: Text('List a New Part',
+                                    style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.w600)),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
 
                             // Inventory items
                             if (_filteredListings.isEmpty)
@@ -181,7 +201,7 @@ class _SellScreenState extends State<SellScreen> {
                                               color: AppTheme.textSecondary,
                                               fontWeight: FontWeight.w500)),
                                       const SizedBox(height: 6),
-                                      Text('Tap the button below to list a part!',
+                                      Text('Tap the button above to list a part!',
                                           style: GoogleFonts.poppins(
                                               color: AppTheme.textSecondary,
                                               fontSize: 12)),
@@ -199,37 +219,33 @@ class _SellScreenState extends State<SellScreen> {
                                   statusColor: _statusColor(listing['status'] ?? 'available'),
                                   statusLabel: _statusLabel(listing['status'] ?? 'available'),
                                   icon: _categoryIcon(listing['category'] ?? ''),
-                                  onTap: () => Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => ProductDetailScreen(
-                                        isMine: true,
-                                        listingId: listing['id'],
-                                        productName: listing['title'],
-                                        price: ApiService.formatPrice(listing['price']),
-                                        priceAmount: listing['price'],
-                                        sellerName: _username,
-                                        category: listing['category'] ?? '',
-                                        condition: listing['condition'] ?? '',
-                                        description: listing['description'],
+                                  imageUrl: listing['photo'], 
+                                  onTap: () async {
+                                    final result = await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => ProductDetailScreen(
+                                          isMine: true,
+                                          listingId: listing['id'],
+                                          productName: listing['title'],
+                                          price: ApiService.formatPrice(listing['price']),
+                                          priceAmount: listing['price'],
+                                          sellerName: _username,
+                                          category: listing['category'] ?? '',
+                                          condition: listing['condition'] ?? '',
+                                          description: listing['description'],
+                                          imageUrl: listing['photo'], 
+                                        ),
                                       ),
-                                    ),
-                                  ).then((_) => _loadData()),
+                                    );
+
+                                    if (result == true) {
+                                      _loadData();
+                                    }
+                                  },
                                 ),
                               )),
                             const SizedBox(height: 20),
-
-                            ElevatedButton.icon(
-                              onPressed: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (_) => const ListPartScreen()),
-                              ).then((_) => _loadData()),
-                              icon: const Icon(Icons.add),
-                              label: Text('List a New Part',
-                                  style: GoogleFonts.poppins(
-                                      fontWeight: FontWeight.w600)),
-                            ),
                           ],
                         ),
                       ),
@@ -257,6 +273,7 @@ class _InventoryItem extends StatelessWidget {
   final Color statusColor;
   final String statusLabel;
   final IconData icon;
+  final String? imageUrl; 
   final VoidCallback onTap;
 
   const _InventoryItem({
@@ -266,6 +283,7 @@ class _InventoryItem extends StatelessWidget {
     required this.statusColor,
     required this.statusLabel,
     required this.icon,
+    this.imageUrl, 
     required this.onTap,
   });
 
@@ -317,6 +335,7 @@ class _InventoryItem extends StatelessWidget {
                 ],
               ),
             ),
+            
             Container(
               width: 60,
               height: 60,
@@ -324,7 +343,16 @@ class _InventoryItem extends StatelessWidget {
                 color: const Color(0xFFF3F4F6),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, size: 32, color: AppTheme.primary),
+              clipBehavior: Clip.antiAlias, 
+              child: imageUrl != null && imageUrl!.isNotEmpty
+                  ? Image.network(
+                      imageUrl!,
+                      fit: BoxFit.cover, 
+                      errorBuilder: (context, error, stackTrace) {
+                        return Icon(icon, size: 32, color: AppTheme.primary);
+                      },
+                    )
+                  : Icon(icon, size: 32, color: AppTheme.primary),
             ),
           ],
         ),

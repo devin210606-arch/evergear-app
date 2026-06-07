@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional
@@ -6,6 +6,8 @@ from database import get_db
 from core.dependencies import get_current_user
 from models.user_model import User
 from models.listing_model import Listing
+import os
+import shutil
 
 router = APIRouter()
 
@@ -22,6 +24,14 @@ class ListingUpdate(BaseModel):
     category: str
     condition: str
     description: Optional[str] = None
+
+# 🟢 HELPER FUNCTION: Calculates the real average rating safely before sending to Flutter
+def get_seller_rating(db: Session, seller_id: int) -> float:
+    seller = db.query(User).filter(User.id == seller_id).first()
+    # Check if seller exists and has been rated at least once
+    if seller and getattr(seller, 'rating_count', 0) > 0:
+        return round(seller.total_rating_score / seller.rating_count, 1)
+    return 0.0 # Default fallback if no ratings yet
 
 # GET all listings (Buy page)
 @router.get("")
@@ -48,6 +58,7 @@ def get_listings(
             "seller_id": l.seller_id,
             "seller_name": l.seller_name,
             "photo": l.photo,
+            "seller_rating": get_seller_rating(db, l.seller_id) # 🟢 Attached rating here!
         }
         for l in listings
     ]
@@ -68,6 +79,7 @@ def get_popular_listings(db: Session = Depends(get_db)):
             "status": l.status,
             "seller_name": l.seller_name,
             "photo": l.photo,
+            "seller_rating": get_seller_rating(db, l.seller_id) # 🟢 Attached rating here!
         }
         for l in listings
     ]
@@ -81,6 +93,12 @@ def get_my_listings(
     listings = db.query(Listing).filter(
         Listing.seller_id == current_user.id
     ).all()
+    
+    # Calculate current user's own rating to attach to their inventory
+    my_rating = 0.0
+    if getattr(current_user, 'rating_count', 0) > 0:
+        my_rating = round(current_user.total_rating_score / current_user.rating_count, 1)
+
     return [
         {
             "id": l.id,
@@ -91,17 +109,12 @@ def get_my_listings(
             "description": l.description,
             "status": l.status,
             "photo": l.photo,
+            "seller_rating": my_rating # 🟢 Attached rating here!
         }
         for l in listings
     ]
 
 # GET single listing
-@router.get("") # (Or whatever your route path is currently set to)
-def get_all_available_listings(db: Session = Depends(get_db)):
-    # This filter is the magic trick!
-    available_listings = db.query(Listing).filter(Listing.status == "available").all()
-    return available_listings
-
 @router.get("/{listing_id}")
 def get_listing(listing_id: int, db: Session = Depends(get_db)):
     listing = db.query(Listing).filter(Listing.id == listing_id).first()
@@ -118,60 +131,62 @@ def get_listing(listing_id: int, db: Session = Depends(get_db)):
         "seller_id": listing.seller_id,
         "seller_name": listing.seller_name,
         "photo": listing.photo,
+        "seller_rating": get_seller_rating(db, listing.seller_id) # 🟢 Attached rating here!
     }
 
 # POST create listing
 @router.post("")
 def create_listing(
-    listing_data: ListingCreate,
+    title: str = Form(...),
+    price: int = Form(...),
+    category: str = Form(...),
+    condition: str = Form(...),
+    description: str = Form(None), 
+    image: UploadFile = File(None), 
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    photo_url = None
+    
+    if image is not None:
+        os.makedirs("uploads", exist_ok=True)
+        file_location = f"uploads/{image.filename}"
+        with open(file_location, "wb+") as file_object:
+            shutil.copyfileobj(image.file, file_object)
+        
+        photo_url = f"http://127.0.0.1:8000/{file_location}"
+
     new_listing = Listing(
-        title=listing_data.title,
-        price=listing_data.price,
-        category=listing_data.category,
-        condition=listing_data.condition,
-        description=listing_data.description,
+        title=title,
+        price=price,
+        category=category,
+        condition=condition,
+        description=description,
         seller_id=current_user.id,
         seller_name=current_user.name,
-        status="available"
+        status="available",
+        photo=photo_url 
     )
     db.add(new_listing)
     db.commit()
     db.refresh(new_listing)
+    
     return {
         "message": "Listing created successfully!",
         "id": new_listing.id,
         "title": new_listing.title,
     }
 
-@router.post("/{listing_id}/buy")
-def buy_listing(
-    listing_id: int, 
-    db: Session = Depends(get_db), 
-    current_user: User = Depends(get_current_user)
-):
-    # Find the listing
-    listing = db.query(Listing).filter(Listing.id == listing_id).first()
-    
-    # Safety checks
-    if not listing:
-        raise HTTPException(status_code=404, detail="Listing not found")
-    if listing.status == "sold":
-        raise HTTPException(status_code=400, detail="Sorry, this item is already sold!")
-
-    # Mark as sold
-    listing.status = "sold"
-    db.commit()
-    
-    return {"message": "Item purchased successfully!", "status": listing.status}
-
 # PUT update listing
 @router.put("/{listing_id}")
 def update_listing(
     listing_id: int,
-    listing_data: ListingUpdate,
+    title: str = Form(...),
+    price: int = Form(...),
+    category: str = Form(...),
+    condition: str = Form(...),
+    description: str = Form(None),
+    image: UploadFile = File(None), 
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -180,13 +195,24 @@ def update_listing(
         raise HTTPException(status_code=404, detail="Listing not found")
     if listing.seller_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not your listing")
-    listing.title = listing_data.title
-    listing.price = listing_data.price
-    listing.category = listing_data.category
-    listing.condition = listing_data.condition
-    listing.description = listing_data.description
+    
+    listing.title = title
+    listing.price = price
+    listing.category = category
+    listing.condition = condition
+    listing.description = description
+
+    if image is not None:
+        os.makedirs("uploads", exist_ok=True)
+        file_location = f"uploads/{image.filename}"
+        with open(file_location, "wb+") as file_object:
+            shutil.copyfileobj(image.file, file_object)
+        
+        listing.photo = f"http://10.0.2.2:8000/{file_location}"
+
     db.commit()
     db.refresh(listing)
+    
     return {"message": "Listing updated!", "id": listing.id}
 
 # DELETE listing

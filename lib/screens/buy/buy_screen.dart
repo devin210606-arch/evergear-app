@@ -4,7 +4,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/category_chip.dart';
 import '../../widgets/product_card.dart';
 import '../home/main_shell.dart';
-import '../home/product_detail_screen.dart';
+import '../home/product_detail_screen.dart'; 
 import '../../services/api_service.dart';
 import '../../widgets/wallet_header.dart';
 
@@ -21,26 +21,34 @@ class _BuyScreenState extends State<BuyScreen> {
   final _searchCtrl = TextEditingController();
   String _username = 'User';
   int _selectedCategory = -1;
-
-  IconData _categoryIcon(String category) {
-  switch (category) {
-    case 'LCD': return Icons.phone_android;
-    case 'Battery': return Icons.battery_full;
-    case 'Camera': return Icons.camera_alt_outlined;
-    case 'Back Cover': return Icons.smartphone;
-    default: return Icons.devices;
-  }
-}
-
   List<Map<String, dynamic>> _allProducts = [];
   bool _isLoading = false;
+
+  IconData _categoryIcon(String category) {
+    switch (category) {
+      case 'LCD': return Icons.phone_android;
+      case 'Battery': return Icons.battery_full;
+      case 'Camera': return Icons.camera_alt_outlined;
+      case 'Back Cover': return Icons.smartphone;
+      default: return Icons.devices;
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     _selectedCategory = widget.initialCategory;
-    _loadListings();
-    _loadUsername();
+    _loadAllData();
+  }
+
+  Future<void> _loadAllData() async {
+    setState(() {
+      _walletKey = UniqueKey(); // Refresh wallet UI too
+    });
+    await Future.wait([
+      _loadUsername(),
+      _loadListings(),
+    ]);
   }
 
   Future<void> _loadListings() async {
@@ -92,99 +100,116 @@ class _BuyScreenState extends State<BuyScreen> {
           children: [
             _buildHeader(context),
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextField(
-                      controller: _searchCtrl,
-                      onChanged: (_) => _loadListings(),
-                      decoration: InputDecoration(
-                        hintText: 'search anything',
-                        prefixIcon: const Icon(Icons.search, color: AppTheme.textSecondary),
-                        filled: true,
-                        fillColor: Colors.white,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+              // 🟢 RefreshIndicator untuk Pull-to-Refresh
+              child: RefreshIndicator(
+                onRefresh: _loadAllData,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextField(
+                        controller: _searchCtrl,
+                        onChanged: (_) => _loadListings(),
+                        decoration: InputDecoration(
+                          hintText: 'search anything',
+                          prefixIcon: const Icon(Icons.search, color: AppTheme.textSecondary),
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       ),
-                    ),
-                    const SizedBox(height: 20),
+                      const SizedBox(height: 20),
 
-                    Text('Popular Categories',
-                        style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.textPrimary)),
-                    const SizedBox(height: 12),
-                    _buildCategories(),
-                    const SizedBox(height: 20),
+                      Text('Popular Categories',
+                          style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.textPrimary)),
+                      const SizedBox(height: 12),
+                      _buildCategories(),
+                      const SizedBox(height: 20),
 
-                    Text('Products',
-                        style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.textPrimary)),
-                    const SizedBox(height: 12),
+                      Text('Products',
+                          style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.textPrimary)),
+                      const SizedBox(height: 12),
 
-                      _isLoading
-                          ? const Center(child: CircularProgressIndicator())
-                          : _filteredProducts.isEmpty
-                              ? Center(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(40),
-                                    child: Text('No products found',
-                                        style: GoogleFonts.poppins(
-                                            color: AppTheme.textSecondary)),
-                                  ),
-                                )
-                              : GridView.count(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  crossAxisCount: 2,
-                                  mainAxisSpacing: 12,
-                                  crossAxisSpacing: 12,
-                                  childAspectRatio: 0.75,
-                                  children: _filteredProducts
-                                      .map((p) => ProductCard(
-                                            name: p['title'] ?? '',
-                                            price: ApiService.formatPrice(p['price']),
-                                            ecoValue: '${(((p['price'] ?? 0) / 100000) * 0.2).clamp(0.1, 25.0).toStringAsFixed(1)}% CO2',
-                                            icon: _categoryIcon(p['category'] ?? ''),
-                                            onTap: () {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (_) => ProductDetailScreen(
-                                                    listingId: p['id'],
-                                                    productName: p['title'],
-                                                    price: ApiService.formatPrice(p['price']),
-                                                    priceAmount: p['price'],
-                                                    sellerName: p['seller_name'],
-                                                    category: p['category'],
-                                                    condition: p['condition'],
-                                                    description: p['description'],
+                        _isLoading
+                            ? const Center(child: CircularProgressIndicator())
+                            : _filteredProducts.isEmpty
+                                ? Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(40),
+                                      child: Text('No products found',
+                                          style: GoogleFonts.poppins(
+                                              color: AppTheme.textSecondary)),
+                                    ),
+                                  )
+                                : GridView.count(
+                                    shrinkWrap: true,
+                                    physics: const NeverScrollableScrollPhysics(),
+                                    crossAxisCount: 2,
+                                    mainAxisSpacing: 12,
+                                    crossAxisSpacing: 12,
+                                    childAspectRatio: 0.75,
+                                    children: _filteredProducts
+                                        .map((p) => ProductCard(
+                                              name: p['title'] ?? '',
+                                              price: ApiService.formatPrice(p['price']),
+                                              ecoValue: '${(((p['price'] ?? 0) / 100000) * 0.2).clamp(0.1, 25.0).toStringAsFixed(1)}% CO2',
+                                              icon: _categoryIcon(p['category'] ?? ''),
+                                              
+                                              // 🟢 FOTO: Dibuat kebal agar tidak error jika namanya beda
+                                              imageUrl: p['imageUrl'] ?? p['photo'],
+                                              
+                                              onTap: () async {
+                                                // 🟢 TANGKAP SINYAL
+                                                final result = await Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (_) => ProductDetailScreen(
+                                                      listingId: p['id'],
+                                                      productName: p['title'],
+                                                      price: ApiService.formatPrice(p['price']),
+                                                      priceAmount: p['price'],
+                                                      sellerName: p['seller_name'] ?? 'Seller',
+                                                      
+                                                      // 🟢 RATING: Tiket rating yang hilang sudah ditambahkan!
+                                                      sellerRating: (p['seller_rating'] ?? 0.0).toDouble(),
+                                                      
+                                                      category: p['category'] ?? '',
+                                                      condition: p['condition'] ?? '',
+                                                      description: p['description'],
+                                                      imageUrl: p['imageUrl'] ?? p['photo']
+                                                    ),
                                                   ),
-                                                ),
-                                              ).then((_) {
-                                                _loadListings();
-                                                setState(() {
-                                                _walletKey = UniqueKey();
-                                              });
-                                              });
-                                            },
-                                          ))
-                                      .toList(),
-                                ),
-                    const SizedBox(height: 20),
-                  ],
+                                                );
+                                                
+                                                // 🟢 OPTIMISTIC UI: Barang langsung menguap setelah dibeli!
+                                                if (result == true) {
+                                                  setState(() {
+                                                    _allProducts.removeWhere((item) => item['id'] == p['id']);
+                                                  });
+                                                }
+                                              },
+                                            ))
+                                        .toList(),
+                                  ),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -232,4 +257,4 @@ class _BuyScreenState extends State<BuyScreen> {
       ),
     );
   }
-} 
+}

@@ -36,11 +36,11 @@ def create_order(
     tax_amount = int(listing.price * 0.10)
     grand_total = listing.price + platform_fee + tax_amount
 
-    # 1. NEW: SECURITY CHECK
+    # 1. SECURITY CHECK
     if current_user.wallet_balance < grand_total:
         raise HTTPException(status_code=400, detail="Insufficient funds for item, fee, and tax")
     
-    # 2. NEW: DEDUCT THE MONEY
+    # 2. DEDUCT THE MONEY
     current_user.wallet_balance -= grand_total
 
     new_order = Order(
@@ -95,6 +95,7 @@ def get_my_orders(
             "payment_method": o.payment_method,
             "status": o.status,
             "seller_name": o.seller_name,
+            "seller_id": o.seller_id, # 🟢 PELAKU UTAMA SUDAH DITANGKAP DAN DIPERBAIKI!
         }
         for o in orders
     ]
@@ -115,6 +116,7 @@ def get_selling_orders(
             "payment_method": o.payment_method,
             "status": o.status,
             "buyer_name": o.buyer_name,
+            "buyer_id": o.buyer_id, # 🟢 Ditambahkan juga untuk berjaga-jaga
         }
         for o in orders
     ]
@@ -136,6 +138,7 @@ def get_order(
         "status": order.status,
         "buyer_name": order.buyer_name,
         "seller_name": order.seller_name,
+        "seller_id": order.seller_id, # 🟢 Ditambahkan di sini juga
         "payment_method": order.payment_method,
     }
 

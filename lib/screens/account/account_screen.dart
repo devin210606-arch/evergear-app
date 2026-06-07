@@ -5,7 +5,7 @@ import 'edit_profile_screen.dart';
 import 'change_password_screen.dart';
 import 'payment_method_screen.dart';
 import 'help_center_screen.dart';
-import '../home/favorites_screen.dart';
+import '../home/favorites_screen.dart'; // Ensure this file contains the FavoritesScreen class
 import '../../services/api_service.dart';
 import '../home/my_orders_screen.dart';
 import '../chat/chats_list_screen.dart';
@@ -25,7 +25,7 @@ class _AccountScreenState extends State<AccountScreen> {
   // Added Eco Stat Variables
   int _partsSold = 0;
   int _partsBought = 0;
-  int _co2Reduced = 0;
+  double _co2Reduced = 0.0;
   int _savedFromLandfill = 0;
 
   @override
@@ -52,7 +52,7 @@ class _AccountScreenState extends State<AccountScreen> {
       setState(() {
         _partsSold = result['data']['parts_sold'] ?? 0;
         _partsBought = result['data']['parts_bought'] ?? 0;
-        _co2Reduced = result['data']['co2_reduced_percent'] ?? 0;
+        _co2Reduced = (result['data']['co2_reduced_percent'] ?? 0).toDouble();
         _savedFromLandfill = result['data']['parts_saved_from_landfill'] ?? 0;
       });
     }
@@ -184,10 +184,7 @@ class _AccountScreenState extends State<AccountScreen> {
                         children: [
                           _EcoStat(label: 'Parts Sold', value: '$_partsSold'), // Wired up!
                           _EcoStat(label: 'Parts bought', value: '$_partsBought'), // Wired up!
-                          _EcoStat(
-                              label: 'CO2 Reduced',
-                              value: '$_co2Reduced%', // Wired up!
-                              valueColor: AppTheme.success),
+                          _EcoStat(label: 'CO2 Reduced', value: '${_co2Reduced.toStringAsFixed(1)}%', valueColor: AppTheme.success),
                         ],
                       ),
                     ],

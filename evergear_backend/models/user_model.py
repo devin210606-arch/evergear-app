@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, String, DateTime, Float
 from database import Base
 from sqlalchemy.orm import relationship
 from datetime import datetime, timedelta
@@ -14,7 +14,10 @@ class User(Base):
     phone = Column(String, nullable=True)
     avatar = Column(String, nullable=True)
     wallet_balance = Column(Integer, default=0, nullable=False)
+    total_rating_score = Column(Float, default=0.0) 
+    rating_count = Column(Integer, default=0)
     transactions = relationship("Transaction", back_populates="user")
+    
 
 class PasswordReset(Base):
     __tablename__ = "password_resets"

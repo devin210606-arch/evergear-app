@@ -1,3 +1,4 @@
+import 'package:evergear/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -6,20 +7,33 @@ import 'dart:io';
 import '../../theme/app_theme.dart';
 
 class EditListingScreen extends StatefulWidget {
-  const EditListingScreen({super.key});
+  final int listingId;
+  final String title;
+  final int price;
+  final String category;
+  final String condition;
+  final String description;
+
+  const EditListingScreen({
+    super.key,
+    required this.listingId,
+    required this.title,
+    required this.price,
+    required this.category,
+    required this.condition,
+    required this.description,
+  });
 
   @override
   State<EditListingScreen> createState() => _EditListingScreenState();
 }
 
 class _EditListingScreenState extends State<EditListingScreen> {
-  // Pre-filled with existing listing data
-  final _nameCtrl = TextEditingController(text: 'Google Pixel 7 Camera');
-  final _priceCtrl = TextEditingController(text: '120000');
-  final _descCtrl = TextEditingController(
-      text: 'High quality refurbished camera module. Fully tested.');
-  int _selectedCategory = 2; // Camera pre-selected
-  String _selectedCondition = 'Refurbished';
+  late TextEditingController _nameCtrl;
+  late TextEditingController _priceCtrl;
+  late TextEditingController _descCtrl;
+  late int _selectedCategory;
+  late String _selectedCondition;
   final List<File> _photos = [];
 
   final List<Map<String, dynamic>> _categories = [
@@ -32,6 +46,21 @@ class _EditListingScreenState extends State<EditListingScreen> {
   final List<String> _conditions = ['Refurbished', 'Broken', 'Like New', 'Used'];
 
   @override
+  void initState() {
+    super.initState();
+    // Mengisi kolom teks dengan data asli dari database
+    _nameCtrl = TextEditingController(text: widget.title);
+    _priceCtrl = TextEditingController(text: widget.price.toString());
+    _descCtrl = TextEditingController(text: widget.description);
+    _selectedCondition = widget.condition;
+    
+    // Mencari kategori yang sesuai
+    final cats = ['LCD', 'Battery', 'Camera', 'Back Cover'];
+    _selectedCategory = cats.indexOf(widget.category);
+    if (_selectedCategory == -1) _selectedCategory = 0; 
+  }
+
+  @override
   void dispose() {
     _nameCtrl.dispose();
     _priceCtrl.dispose();
@@ -39,20 +68,41 @@ class _EditListingScreenState extends State<EditListingScreen> {
     super.dispose();
   }
 
-  void _submit() {
+  void _submit() async {
     if (_nameCtrl.text.isEmpty) { _showError('Please enter a part name'); return; }
     if (_priceCtrl.text.isEmpty) { _showError('Please enter a price'); return; }
     if (_selectedCategory == -1) { _showError('Please select a category'); return; }
-    // TODO: call backend update listing API
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('Listing updated successfully',
-          style: GoogleFonts.poppins(fontSize: 13)),
-      backgroundColor: AppTheme.success,
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      margin: const EdgeInsets.all(16),
-    ));
-    Navigator.pop(context);
+    
+    File? selectedImage = _photos.isNotEmpty ? _photos.first : null;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Updating listing...'), duration: Duration(seconds: 1)),
+    );
+
+    final result = await ApiService.updateListing(
+      listingId: widget.listingId, // Menggunakan ID dinamis
+      title: _nameCtrl.text,
+      price: int.parse(_priceCtrl.text),
+      category: _categories[_selectedCategory]['label'],
+      condition: _selectedCondition,
+      description: _descCtrl.text,
+      imageFile: selectedImage, 
+    );
+
+    if (!mounted) return;
+
+    if (result['success']) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Listing updated successfully', style: GoogleFonts.poppins(fontSize: 13)),
+        backgroundColor: AppTheme.success,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        margin: const EdgeInsets.all(16),
+      ));
+      Navigator.pop(context); 
+    } else {
+      _showError(result['message'] ?? 'Failed to update listing');
+    }
   }
 
   void _showError(String msg) {

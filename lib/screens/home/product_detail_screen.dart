@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../theme/app_theme.dart';
 import '../chat/chat_screen.dart';
-import 'payment_screen.dart';
+import '../home/payment_screen.dart'; // Ensure the correct path to PaymentScreen
+import '../buy/buy_animation.dart'; // Ensure the correct path to BuyAnimationScreen
 import '../sell/edit_listing_screen.dart';
 import '../../models/favorites_model.dart';
 import '../../services/api_service.dart';
@@ -17,7 +18,9 @@ class ProductDetailScreen extends StatefulWidget {
   final String sellerName;
   final String category;
   final String condition;
+  final double sellerRating;
   final String? description;
+  final String? imageUrl;
 
   const ProductDetailScreen({
     super.key,
@@ -29,7 +32,9 @@ class ProductDetailScreen extends StatefulWidget {
     this.sellerName = 'Seller',
     this.category = '',
     this.condition = '',
+    this.sellerRating = 0.0,
     this.description,
+    this.imageUrl,
   });
 
   @override
@@ -77,10 +82,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 setState(() => _isFavorited = !_isFavorited);
                 if (_isFavorited) {
                   FavoritesModel.add({
+                    'id': widget.listingId, 
                     'name': widget.productName,
                     'price': widget.price,
+                    'priceAmount': widget.priceAmount,
                     'rating': 4.0,
                     'icon': _categoryIcon(widget.category),
+                    'imageUrl': widget.imageUrl, 
+                    
+                    // (Opsional) Simpan data pelengkap lainnya agar layar detail tetap utuh saat dibuka dari Favorites
+                    'sellerName': widget.sellerName,
+                    'category': widget.category,
+                    'condition': widget.condition,
+                    'description': widget.description,
                   });
                 } else {
                   FavoritesModel.remove(widget.productName);
@@ -94,15 +108,21 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Product image
-            Container(
+            Container(                       
+              height: 380, 
               width: double.infinity,
-              height: 280,
-              color: Colors.white,
-              child: Icon(
-                _categoryIcon(widget.category),
-                size: 100,
-                color: AppTheme.primary,
+              decoration: const BoxDecoration(
+                color: Color(0xFFF3F4F6),
               ),
+              child: widget.imageUrl != null && widget.imageUrl!.isNotEmpty
+                  ? Image.network(
+                      widget.imageUrl!,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Icon(_categoryIcon(widget.category), size: 100, color: AppTheme.primary);
+                      },
+                    )
+                  : Icon(_categoryIcon(widget.category), size: 100, color: AppTheme.primary),
             ),
 
             Padding(
@@ -207,7 +227,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                   children: [
                                     const Icon(Icons.star, size: 14, color: Colors.amber),
                                     const SizedBox(width: 4),
-                                    Text('4.9  •  Jakarta, Indonesia',
+                                    Text('${widget.sellerRating.toStringAsFixed(1)}  •  Jakarta, Indonesia',
                                         style: GoogleFonts.poppins(
                                             fontSize: 11,
                                             color: AppTheme.textSecondary)),
@@ -259,30 +279,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                   ],
 
-                  // My listing stats — only show when it IS mine
-                  if (widget.isMine) ...[
-                    Text('Listing Stats',
-                        style: GoogleFonts.poppins(
-                            fontSize: 15, fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFFE5E7EB)),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          _StatBox(label: 'Views', value: '124'),
-                          _StatBox(label: 'Interested', value: '8'),
-                          _StatBox(label: 'Chats', value: '3'),
-                        ],
-                      ),
-                    ),
-                  ],
-
                   const SizedBox(height: 100),
                 ],
               ),
@@ -327,7 +323,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       onPressed: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (_) => const EditListingScreen())),
+                              builder: (_) => EditListingScreen(
+                                listingId: widget.listingId,
+                                title: widget.productName,
+                                price: widget.priceAmount,
+                                category: widget.category,
+                                condition: widget.condition,
+                                description: widget.description ?? '',
+                              ),
+                          ),
+                      ),
                       icon: const Icon(Icons.edit_outlined, size: 18),
                       label: Text('Edit Listing',
                           style: GoogleFonts.poppins(
@@ -371,28 +376,49 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   void _showDeleteConfirm(BuildContext context) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16)),
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text('Delete Listing',
             style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
         content: Text('Are you sure you want to delete this listing?',
             style: GoogleFonts.poppins(fontSize: 13)),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext), // Tutup pop-up
             child: Text('Cancel', style: GoogleFonts.poppins()),
           ),
           ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
+            onPressed: () async {
+              // 1. Tutup kotak dialog konfirmasinya dulu
+              Navigator.pop(dialogContext); 
+              
+              // 2. Munculkan pesan loading
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Deleting listing...')),
+              );
+
+              // 3. Tembak API untuk menghapus data
+              final result = await ApiService.deleteListing(widget.listingId);
+
+              if (!context.mounted) return;
+              if (result['success']) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Listing deleted successfully!'),
+                    backgroundColor: AppTheme.error, // Warna merah
+                  ),
+                );
+                // 4. Kembali ke halaman sebelumnya dan bawa sinyal "true" (artinya ada data yang terhapus)
+                Navigator.pop(context, true); 
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(result['message'] ?? 'Failed to delete')),
+                );
+              }
             },
-            style:
-                ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
             child: Text('Delete',
-                style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.w600)),
+                style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
           ),
         ],
       ),

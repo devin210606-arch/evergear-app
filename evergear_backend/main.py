@@ -3,7 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
 from controllers import user_controller, listing_controller, order_controller, wallet_controller, chat_controller, engagement_controller
 from models import listing_model, order_model
-
+from fastapi.staticfiles import StaticFiles
+import os
 
 # Automatically create the SQLite database tables on startup
 Base.metadata.create_all(bind=engine)
@@ -12,6 +13,9 @@ app = FastAPI(
     title="EverGear API",
     description="Monolithic Backend for Gadget Owners & Technicians"
 )
+
+os.makedirs("uploads", exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # Allow Flutter to talk to this API
 app.add_middleware(

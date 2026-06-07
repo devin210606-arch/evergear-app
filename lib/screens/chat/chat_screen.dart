@@ -11,9 +11,9 @@ class ChatScreen extends StatefulWidget {
 
   const ChatScreen({
     super.key,
-    required this.conversationId, // 🟢 Bikin jadi required
-    required this.otherUserName,  // 🟢 Bikin jadi required
-    required this.productName,    // 🟢 Bikin jadi required
+    required this.conversationId,
+    required this.otherUserName, 
+    required this.productName,   
   });
   
   @override
@@ -123,42 +123,44 @@ class _ChatScreenState extends State<ChatScreen> {
       body: Column(
         children: [
           // Product context banner
-          Container(
-            padding: const EdgeInsets.all(12),
-            color: Colors.white,
-            child: Row(
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF3F4F6),
-                    borderRadius: BorderRadius.circular(8),
+          if (widget.otherUserName != 'EverGear Support')
+            Container(
+              padding: const EdgeInsets.all(12),
+              color: Colors.white,
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF3F4F6),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.devices,
+                        color: AppTheme.primary, size: 24),
                   ),
-                  child: const Icon(Icons.devices,
-                      color: AppTheme.primary, size: 24),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(widget.productName,
-                      style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w600, fontSize: 13)),
-                ),
-                OutlinedButton(
-                  onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => const ProductDetailScreen())),
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size(60, 32),
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(widget.productName,
+                        style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w600, fontSize: 13)),
                   ),
-                  child: Text('View',
-                      style: GoogleFonts.poppins(fontSize: 12)),
-                ),
-              ],
+                  
+                  OutlinedButton(
+                    onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const ProductDetailScreen())),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(60, 32),
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                    ),
+                    child: Text('View',
+                        style: GoogleFonts.poppins(fontSize: 12)),
+                  ),
+                ],
+              ),
             ),
-          ),
           
           // Messages
           Expanded(

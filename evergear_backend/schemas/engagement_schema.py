@@ -22,5 +22,5 @@ class ReviewResponse(BaseModel):
 class EcoStatsResponse(BaseModel):
     parts_sold: int
     parts_bought: int
-    co2_reduced_percent: int
+    co2_reduced_percent: float
     parts_saved_from_landfill: int

@@ -7,6 +7,7 @@ class ProductCard extends StatelessWidget {
   final String price;
   final String ecoValue;
   final IconData icon;
+  final String? imageUrl; // 🟢 1. Tambahkan wadah untuk menampung link gambar
   final VoidCallback? onTap;
 
   const ProductCard({
@@ -15,6 +16,7 @@ class ProductCard extends StatelessWidget {
     required this.price,
     required this.ecoValue,
     required this.icon,
+    this.imageUrl, // 🟢 2. Masukkan ke constructor (tidak wajib/bisa null)
     this.onTap,
   });
 
@@ -46,7 +48,21 @@ class ProductCard extends StatelessWidget {
                   color: Color(0xFFF3F4F6),
                   borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
                 ),
-                child: Icon(icon, size: 56, color: AppTheme.primary),
+                // 🟢 3. Logika Pintar: Tampilkan Foto atau Ikon
+                child: imageUrl != null && imageUrl!.isNotEmpty
+                    ? ClipRRect(
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+                        child: Image.network(
+                          imageUrl!,
+                          width: double.infinity,
+                          fit: BoxFit.cover, // Gambar akan dipotong rapi memenuhi kotak
+                          errorBuilder: (context, error, stackTrace) {
+                            // Kalau link gambarnya rusak, kembali tampilkan ikon
+                            return Icon(icon, size: 56, color: AppTheme.primary);
+                          },
+                        ),
+                      )
+                    : Icon(icon, size: 56, color: AppTheme.primary),
               ),
             ),
 
@@ -70,20 +86,30 @@ class ProductCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        price,
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.primary,
+                      // Teks harga yang sudah anti-overflow
+                      Expanded(
+                        child: FittedBox(
+                          alignment: Alignment.centerLeft,
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            price,
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.primary,
+                            ),
+                          ),
                         ),
                       ),
+                      const SizedBox(width: 6),
+                      
+                      // Bagian Icon Daun & CO2
                       Row(
                         children: [
-                          const Icon(Icons.eco, size: 14, color: AppTheme.success), // Ikon Daun Hijau
-                          const SizedBox(width: 4),
+                          const Icon(Icons.eco, size: 14, color: AppTheme.success),
+                          const SizedBox(width: 2),
                           Text(
-                            ecoValue, // Atau gunakan variabel dari parameter card-nya
+                            ecoValue,
                             style: GoogleFonts.poppins(
                               fontSize: 11,
                               fontWeight: FontWeight.w500,

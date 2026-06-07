@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../theme/app_theme.dart';
 import '../home/home_screen.dart';
-import '../buy/buy_screen.dart';
+import '../buy/buy_screen.dart'; // Ensure this file contains the BuyScreen class
 import '../sell/sell_screen.dart';
 import '../account/account_screen.dart';
 

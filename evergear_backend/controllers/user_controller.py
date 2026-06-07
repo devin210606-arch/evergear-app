@@ -197,28 +197,38 @@ def get_avatar(current_user: User = Depends(get_current_user)):
 @router.get("/me/stats", response_model=EcoStatsResponse)
 def get_user_eco_stats(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     
-    # 1. Count parts sold (Listings created by user that are marked "sold")
-    parts_sold = db.query(Listing).filter(
+    # 1. Get actual sold listings to calculate their exact prices
+    sold_listings = db.query(Listing).filter(
         Listing.seller_id == current_user.id, 
         Listing.status == "sold"
-    ).count()
+    ).all()
 
-    # 2. Count parts bought (Using wallet purchase transactions as a proxy)
-    parts_bought = db.query(Transaction).filter(
-        Transaction.user_id == current_user.id,
-        Transaction.type == "purchase"
-    ).count()
+    # 2. Get actual bought orders to calculate their exact prices
+    bought_orders = db.query(Order).filter(
+        Order.buyer_id == current_user.id
+    ).all()
 
-    # 3. Calculate Eco Metrics
+    parts_sold = len(sold_listings)
+    parts_bought = len(bought_orders)
     saved_from_landfill = parts_sold + parts_bought
+
+    # 3. Apply your heuristic CO2 math!
+    total_co2 = 0.0
     
-    # Arbitrary gamification formula for CO2 percentage (e.g., each part is a 2% boost, capped at 100%)
-    co2_percent = min(saved_from_landfill * 2, 100) 
+    # Add CO2 for items sold
+    for item in sold_listings:
+        item_co2 = max(0.1, min(25.0, (item.price / 100000) * 0.2))
+        total_co2 += item_co2
+        
+    # Add CO2 for items bought
+    for order in bought_orders:
+        order_co2 = max(0.1, min(25.0, (order.price / 100000) * 0.2))
+        total_co2 += order_co2
 
     return {
         "parts_sold": parts_sold,
         "parts_bought": parts_bought,
-        "co2_reduced_percent": co2_percent,
+        "co2_reduced_percent": round(total_co2, 1),
         "parts_saved_from_landfill": saved_from_landfill
     }
 
@@ -292,3 +302,43 @@ def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
     db.commit()
 
     return {"message": "Password has been successfully reset."}
+
+# ==========================================
+# SELLER RATING
+# ==========================================
+
+class RatingRequest(BaseModel):
+    rating: float
+
+@router.post("/{seller_id}/rate")
+def rate_seller(seller_id: int, request: RatingRequest, db: Session = Depends(get_db)):
+    # 1. Find the seller in the database
+    seller = db.query(User).filter(User.id == seller_id).first()
+    
+    if not seller:
+        raise HTTPException(status_code=404, detail="Seller not found")
+        
+    # 2. Safety check: ensure they aren't None (for older users)
+    if seller.total_rating_score is None:
+        seller.total_rating_score = 0.0
+    if seller.rating_count is None:
+        seller.rating_count = 0
+
+    # 3. Add the new rating math
+    seller.total_rating_score += request.rating
+    seller.rating_count += 1
+    
+    # 4. Save to database
+    db.commit()
+
+    # Calculate current average just to send back
+    current_average = round(seller.total_rating_score / seller.rating_count, 1)
+
+    return {
+        "success": True,
+        "message": "Thank you for rating!",
+        "data": {
+            "seller_id": seller_id,
+            "new_average": current_average
+        }
+    }

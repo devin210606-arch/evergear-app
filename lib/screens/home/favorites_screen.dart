@@ -54,14 +54,28 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               childAspectRatio: 0.75,
               children: items
                   .map((item) => ProductCard(
-                        name: item['name'],
-                        price: item['price'],
-                        ecoValue: '2% CO2',
+                        name: item['name'] ?? '',
+                        price: item['price'] ?? '',
+                        
+                        // 🟢 Perbaikan logika matematika di sini
+                        ecoValue: '${(((item['priceAmount'] ?? 0) / 100000) * 0.2).clamp(0.1, 25.0).toStringAsFixed(1)}% CO2',
+                        
                         icon: item['icon'],
+                        imageUrl: item['imageUrl'] ?? item['photo'], 
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (_) => const ProductDetailScreen()),
+                              builder: (_) => ProductDetailScreen(
+                                listingId: item['id'] ?? 0,
+                                productName: item['name'] ?? '',
+                                price: item['price'] ?? '',
+                                priceAmount: item['priceAmount'] ?? 0,
+                                sellerName: item['sellerName'] ?? 'Seller',
+                                category: item['category'] ?? '',
+                                condition: item['condition'] ?? 'Used',
+                                description: item['description'] ?? '',
+                                imageUrl: item['imageUrl'] ?? item['photo'],
+                              )),
                         ).then((_) => setState(() {})),
                       ))
                   .toList(),

@@ -29,9 +29,18 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _loadUsername();
-    _loadPopularProducts();
-    _loadEcoStats(); // Added this so it actually loads!
+    _loadAllData();
+  }
+
+  Future<void> _loadAllData() async {
+    setState(() {
+      _walletKey = UniqueKey(); // Refresh wallet UI too
+    });
+    await Future.wait([
+      _loadUsername(),
+      _loadPopularProducts(),
+      _loadEcoStats(),
+    ]);
   }
 
   Future<void> _loadEcoStats() async {
@@ -85,41 +94,46 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(context),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 16),
-                    _buildActionBanners(context),
-                    const SizedBox(height: 16),
-                    _buildEcoBanner(),
-                    const SizedBox(height: 20),
-                    Text('Popular Categories',
-                        style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.textPrimary)),
-                    const SizedBox(height: 12),
-                    _buildCategories(context),
-                    const SizedBox(height: 20),
-                    Text('Popular Products',
-                        style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.textPrimary)),
-                    const SizedBox(height: 12),
-                    _buildProductGrid(context),
-                    const SizedBox(height: 20),
-                  ],
+        // 🟢 RefreshIndicator untuk Pull-to-Refresh
+        child: RefreshIndicator(
+          onRefresh: _loadAllData,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeader(context),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 16),
+                      _buildActionBanners(context),
+                      const SizedBox(height: 16),
+                      _buildEcoBanner(),
+                      const SizedBox(height: 20),
+                      Text('Popular Categories',
+                          style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.textPrimary)),
+                      const SizedBox(height: 12),
+                      _buildCategories(context),
+                      const SizedBox(height: 20),
+                      Text('Popular Products',
+                          style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.textPrimary)),
+                      const SizedBox(height: 12),
+                      _buildProductGrid(context),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -252,29 +266,34 @@ class _HomeScreenState extends State<HomeScreen> {
         price: ApiService.formatPrice(p['price']),
         ecoValue: '${(((p['price'] ?? 0) / 100000) * 0.2).clamp(0.1, 25.0).toStringAsFixed(1)}% CO2',
         icon: _categoryIcon(p['category'] ?? ''),
-
-        onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ProductDetailScreen(
-              listingId: p['id'],
-              productName: p['title'],
-              price: ApiService.formatPrice(p['price']),
-              priceAmount: p['price'],
-              sellerName: p['seller_name'] ?? '',
-              category: p['category'] ?? '',
-              condition: p['condition'] ?? '',
-              description: p['description'],
+        imageUrl: p['photo'],
+        onTap: () async {
+          // 🟢 Tangkap sinyal penghapusan barang
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ProductDetailScreen(
+                listingId: p['id'],
+                productName: p['title'],
+                price: ApiService.formatPrice(p['price']),
+                priceAmount: p['price'],
+                sellerName: p['seller_name'] ?? '',
+                category: p['category'] ?? '',
+                condition: p['condition'] ?? '',
+                description: p['description'],
+                imageUrl: p['photo']
+              ),
             ),
-          ),
-        ).then((_){
-        _loadPopularProducts();
-            _loadEcoStats(); 
+          );
+
+          // Kalau hasil 'true' (dihapus/berubah), refresh data otomatis
+          if (result == true) {
             setState(() {
-              _walletKey = UniqueKey();
+              _popularProducts.removeWhere((item) => item['id'] == p['id']);
             });
-          });
+            // Update skor CO2 di background secara diam-diam
+            _loadEcoStats(); 
+          }
         },
       )).toList(),
     );

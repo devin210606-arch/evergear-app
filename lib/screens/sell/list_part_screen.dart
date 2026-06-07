@@ -55,6 +55,7 @@ class _ListPartScreenState extends State<ListPartScreen> {
       category: cats[_selectedCategory],
       condition: _selectedCondition,
       description: _descCtrl.text.trim(),
+      imageFile: _photos.isNotEmpty ? _photos.first : null,
     );
 
     setState(() => _isLoading = false);
