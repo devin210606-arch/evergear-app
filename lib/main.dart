@@ -15,7 +15,6 @@ import 'screens/home/my_orders_screen.dart';
 import 'screens/chat/chats_list_screen.dart';
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,

@@ -11,11 +11,7 @@
   <component name="ChangeListManager">
     <list default="true" id="1b0fc381-02d9-41ca-9d8c-fc46ba92388c" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/evergear_backend/controllers/listing_controller.py" beforeDir="false" afterPath="$PROJECT_DIR$/evergear_backend/controllers/listing_controller.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/evergear_backend/evergear.db" beforeDir="false" afterPath="$PROJECT_DIR$/evergear_backend/evergear.db" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/screens/home/home_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/screens/home/home_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/screens/home/main_shell.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/screens/home/main_shell.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/screens/sell/sell_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/screens/sell/sell_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/main.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
