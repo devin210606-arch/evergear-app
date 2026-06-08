@@ -5,10 +5,9 @@ import 'edit_profile_screen.dart';
 import 'change_password_screen.dart';
 import 'payment_method_screen.dart';
 import 'help_center_screen.dart';
-import '../home/favorites_screen.dart'; // Ensure this file contains the FavoritesScreen class
+import '../home/favorites_screen.dart'; 
 import '../../services/api_service.dart';
 import '../home/my_orders_screen.dart';
-import '../chat/chats_list_screen.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -115,13 +114,6 @@ class _AccountScreenState extends State<AccountScreen> {
                     ),
                     const Divider(height: 1, indent: 16, endIndent: 16),
                     _MenuItem(
-                      icon: Icons.chat_bubble_outline,
-                      label: 'Messages',
-                      onTap: () => Navigator.push(context,
-                          MaterialPageRoute(builder: (_) => const ChatsListScreen())),
-                    ),
-                    const Divider(height: 1, indent: 16, endIndent: 16),
-                    _MenuItem(
                       icon: Icons.favorite_outline,
                       label: 'My Favorites',
                       onTap: () => Navigator.push(context,
@@ -171,7 +163,7 @@ class _AccountScreenState extends State<AccountScreen> {
                           const Icon(Icons.eco_outlined,
                               color: AppTheme.success, size: 18),
                           const SizedBox(width: 6),
-                          Text("You've saved $_savedFromLandfill parts from landfill", // Wired up!
+                          Text("You've saved $_savedFromLandfill parts from landfill", 
                               style: GoogleFonts.poppins(
                                   fontSize: 12,
                                   color: AppTheme.textPrimary,
@@ -182,8 +174,8 @@ class _AccountScreenState extends State<AccountScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          _EcoStat(label: 'Parts Sold', value: '$_partsSold'), // Wired up!
-                          _EcoStat(label: 'Parts bought', value: '$_partsBought'), // Wired up!
+                          _EcoStat(label: 'Parts Sold', value: '$_partsSold'), 
+                          _EcoStat(label: 'Parts bought', value: '$_partsBought'), 
                           _EcoStat(label: 'CO2 Reduced', value: '${_co2Reduced.toStringAsFixed(1)}%', valueColor: AppTheme.success),
                         ],
                       ),

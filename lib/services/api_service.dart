@@ -670,4 +670,29 @@ class ApiService {
       return {'success': false, 'message': 'Cannot connect to server'};
     }
   }
+
+  // Mengambil jumlah pesan yang belum dibaca
+  static Future<Map<String, dynamic>> getUnreadMessagesCount() async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'message': 'No token'};
+
+      // Pastikan URL endpoint-nya sesuai dengan settingan router FastAPI-mu
+      final response = await http.get(
+        Uri.parse('$baseUrl/chats/unread-count'), 
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        return {'success': false, 'message': 'Failed to load unread count'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': e.toString()};
+    }
+  }
 }

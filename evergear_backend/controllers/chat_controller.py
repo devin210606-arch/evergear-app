@@ -115,3 +115,25 @@ def start_conversation(listing_id: int, db: Session = Depends(get_db), current_u
     db.refresh(new_conv)
 
     return {"conversation_id": new_conv.id}
+
+@router.get("/unread-count")
+async def get_unread_count(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    try:
+        # Menghitung pesan yang masuk ke user ini dan belum dibaca
+        unread_count = db.query(Message).filter(
+            Message.receiver_id == current_user.id,
+            Message.is_read == False
+        ).count()
+        
+        return {
+            "success": True, 
+            "data": {"count": unread_count}
+        }
+    except Exception as e:
+        return {
+            "success": False, 
+            "message": str(e)
+        }

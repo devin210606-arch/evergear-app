@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../theme/app_theme.dart';
 import '../../services/api_service.dart';
+import '../home/main_shell.dart';
 import 'chat_screen.dart';
 
 class ChatsListScreen extends StatefulWidget {
@@ -37,19 +38,18 @@ class _ChatsListScreenState extends State<ChatsListScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
-        title: Text('Messages',
-            style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+        automaticallyImplyLeading: false, // Matikan tombol bawaan yang bikin layar hitam
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadChats,
-          ),
-        ],
-      ),
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () {
+      // 🟢 Ubah angka 4 menjadi 0 agar pulang ke Home
+          MainShell.of(context)?.switchTab(0);
+    },
+  ),
+  title: const Text('Messages'),
+),
+      
+           
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
